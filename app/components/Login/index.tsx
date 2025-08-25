@@ -1,7 +1,6 @@
 // app/components/Login/index.tsx
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { Camera } from 'expo-camera';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -18,7 +17,7 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { Colors, Spacing, Typography, createShadow } from '../../theme';
+import { BorderRadius, Colors, Spacing, Typography, createElevation } from '../../theme';
 import { NavigationProp } from '../../types/navigation';
 
 const { width, height } = Dimensions.get('window');
@@ -33,13 +32,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [permissionsGranted, setPermissionsGranted] = useState<boolean>(false);
-
+  
   const { login } = useAuth();
-
+  
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
     requestPermissions();
@@ -48,12 +46,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   const requestPermissions = async (): Promise<void> => {
     try {
-      // Request location permission
       const { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
-
-      // Request camera permission
       const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
-
+      
       if (locationStatus === 'granted' && cameraStatus === 'granted') {
         setPermissionsGranted(true);
       } else {
@@ -72,18 +67,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 600,
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 4,
-        tension: 15,
+        duration: 500,
         useNativeDriver: true,
       }),
     ]).start();
@@ -95,7 +84,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   const handleLogin = async (): Promise<void> => {
-    // Validation
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -113,13 +101,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     }
 
     setIsLoading(true);
-
+    
     try {
       await login(email.toLowerCase().trim(), password);
-      // Navigation will be handled by the AuthContext
     } catch (error: any) {
       Alert.alert(
-        'Login Failed',
+        'Login Failed', 
         error.message || 'Invalid credentials. Please try again.'
       );
     } finally {
@@ -128,12 +115,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <LinearGradient
-      colors={Colors.gradients.main}
-      style={styles.container}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
+    <View style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -143,148 +125,151 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             styles.content,
             {
               opacity: fadeAnim,
-              transform: [
-                { translateY: slideAnim },
-                { scale: scaleAnim }
-              ],
+              transform: [{ translateY: slideAnim }],
             },
           ]}
         >
-          {/* Logo/Title Section */}
-          <View style={styles.logoContainer}>
-            <LinearGradient
-              colors={Colors.gradients.profile}
-              style={styles.logoGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Feather name="package" size={50} color={Colors.text.white} />
-            </LinearGradient>
+          {/* Header Section */}
+          <View style={styles.headerSection}>
+            <View style={styles.logoContainer}>
+              <View style={styles.logoCircle}>
+                <MaterialIcons name="local-shipping" size={50} color={Colors.primary.green} />
+              </View>
+            </View>
             <Text style={styles.appTitle}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to continue</Text>
+            <Text style={styles.subtitle}>Sign in to continue to your account</Text>
           </View>
 
-          {/* Input Fields */}
-          <View style={styles.inputContainer}>
-            <View style={styles.inputWrapper}>
-              <Feather name="mail" size={20} color={Colors.primary.lavender} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Email Address"
-                placeholderTextColor={Colors.text.light}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!isLoading}
-                testID="email-input"
-              />
-            </View>
-
-            <View style={styles.inputWrapper}>
-              <Feather name="lock" size={20} color={Colors.primary.lavender} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor={Colors.text.light}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                editable={!isLoading}
-                testID="password-input"
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIcon}
-                testID="toggle-password"
-              >
-                <Feather
-                  name={showPassword ? 'eye' : 'eye-off'}
-                  size={20}
-                  color={Colors.primary.lavender}
+          {/* Form Section */}
+          <View style={styles.formSection}>
+            {/* Email Input */}
+            <View style={styles.inputContainer}>
+              <View style={styles.inputWrapper}>
+                <Feather name="mail" size={20} color={Colors.text.secondary} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email address"
+                  placeholderTextColor={Colors.text.tertiary}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isLoading}
                 />
-              </TouchableOpacity>
+              </View>
             </View>
-          </View>
 
-          {/* Forgot Password */}
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
+            {/* Password Input */}
+            <View style={styles.inputContainer}>
+              <View style={styles.inputWrapper}>
+                <Feather name="lock" size={20} color={Colors.text.secondary} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password"
+                  placeholderTextColor={Colors.text.tertiary}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  editable={!isLoading}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  <Feather
+                    name={showPassword ? 'eye' : 'eye-off'}
+                    size={20}
+                    color={Colors.text.secondary}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-          {/* Login Button */}
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={isLoading}
-            activeOpacity={0.8}
-            testID="login-button"
-          >
-            <LinearGradient
-              colors={Colors.gradients.button}
-              style={styles.loginGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
+            {/* Forgot Password */}
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
+            {/* Login Button */}
+            <TouchableOpacity
+              style={[
+                styles.loginButton,
+                isLoading && styles.loginButtonDisabled
+              ]}
+              onPress={handleLogin}
+              disabled={isLoading}
+              activeOpacity={0.8}
             >
               {isLoading ? (
                 <ActivityIndicator color={Colors.text.white} />
               ) : (
                 <Text style={styles.loginButtonText}>Sign In</Text>
               )}
-            </LinearGradient>
-          </TouchableOpacity>
-
-          {/* Sign Up Link */}
-          <View style={styles.signUpContainer}>
-            <Text style={styles.signUpText}>Don't have an account? </Text>
-            <TouchableOpacity>
-              <Text style={styles.signUpLink}>Sign Up</Text>
             </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.divider} />
+            </View>
+
+            {/* Sign Up Link */}
+            <View style={styles.signUpContainer}>
+              <Text style={styles.signUpText}>Don't have an account? </Text>
+              <TouchableOpacity>
+                <Text style={styles.signUpLink}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Permissions Status */}
           {!permissionsGranted && (
             <View style={styles.permissionStatus}>
-              <Feather name="alert-circle" size={16} color={Colors.text.error} />
+              <MaterialIcons name="info-outline" size={16} color={Colors.text.error} />
               <Text style={styles.permissionText}>
-                Please grant camera and location permissions
+                Camera and location permissions required
               </Text>
             </View>
           )}
         </Animated.View>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background.primary,
   },
   keyboardView: {
     flex: 1,
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.xxl,
+    paddingHorizontal: Spacing.xl,
   },
-  logoContainer: {
+  headerSection: {
     alignItems: 'center',
+    marginTop: height * 0.1,
     marginBottom: Spacing.xxxl,
   },
-  logoGradient: {
+  logoContainer: {
+    marginBottom: Spacing.xl,
+  },
+  logoCircle: {
     width: 100,
     height: 100,
-    borderRadius: 30,
+    borderRadius: BorderRadius.round,
+    backgroundColor: Colors.background.secondary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
-    ...createShadow(10),
+    ...createElevation(2),
   },
   appTitle: {
-    fontSize: Typography.fontSize.xxxxl,
+    fontSize: Typography.fontSize.xxxl,
     fontWeight: Typography.fontWeight.bold,
     color: Colors.text.primary,
     marginBottom: Spacing.xs,
@@ -292,7 +277,10 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: Typography.fontSize.md,
     color: Colors.text.secondary,
-    fontWeight: Typography.fontWeight.regular,
+    textAlign: 'center',
+  },
+  formSection: {
+    flex: 1,
   },
   inputContainer: {
     marginBottom: Spacing.lg,
@@ -300,78 +288,91 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.ui.backgroundOpacity,
-    borderRadius: 15,
-    marginBottom: Spacing.md,
+    backgroundColor: Colors.background.inputBar,
+    borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
-    height: 55,
-    ...createShadow(3),
-  },
-  inputIcon: {
-    marginRight: Spacing.sm,
+    height: 50,
+    borderWidth: 1,
+    borderColor: Colors.ui.border,
   },
   input: {
     flex: 1,
+    marginLeft: Spacing.sm,
     fontSize: Typography.fontSize.md,
     color: Colors.text.primary,
-    fontWeight: Typography.fontWeight.medium,
   },
   eyeIcon: {
     padding: Spacing.xs,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: Spacing.xxl,
-  },
-  forgotPasswordText: {
-    color: Colors.primary.lavender,
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semiBold,
-  },
-  loginButton: {
     marginBottom: Spacing.xl,
   },
-  loginGradient: {
-    height: 55,
-    borderRadius: 15,
-    justifyContent: 'center',
+  forgotPasswordText: {
+    color: Colors.primary.darkGreen,
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  loginButton: {
+    backgroundColor: Colors.primary.green,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
-    ...createShadow(8),
+    justifyContent: 'center',
+    height: 50,
+    ...createElevation(2),
+  },
+  loginButtonDisabled: {
+    backgroundColor: Colors.buttons.disabled,
   },
   loginButtonText: {
     color: Colors.text.white,
     fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.bold,
-    letterSpacing: 0.5,
+    fontWeight: Typography.fontWeight.semiBold,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.xl,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.ui.divider,
+  },
+  dividerText: {
+    marginHorizontal: Spacing.md,
+    color: Colors.text.secondary,
+    fontSize: Typography.fontSize.sm,
   },
   signUpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: Spacing.md,
   },
   signUpText: {
     color: Colors.text.secondary,
-    fontSize: Typography.fontSize.sm,
+    fontSize: Typography.fontSize.md,
   },
   signUpLink: {
-    color: Colors.primary.lavender,
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.bold,
+    color: Colors.primary.darkGreen,
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.semiBold,
   },
   permissionStatus: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: Spacing.lg,
+    backgroundColor: '#FFF3E0',
     padding: Spacing.sm,
-    backgroundColor: 'rgba(255, 107, 107, 0.1)',
-    borderRadius: 10,
+    borderRadius: BorderRadius.sm,
+    marginTop: Spacing.lg,
   },
   permissionText: {
     color: Colors.text.error,
     fontSize: Typography.fontSize.xs,
     marginLeft: Spacing.xs,
-    fontWeight: Typography.fontWeight.medium,
   },
 });
 

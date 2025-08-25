@@ -1,4 +1,4 @@
-// App.tsx
+// index.tsx
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,10 +12,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Import screens
+import CreateOrder from './components/CreateOrder/index';
 import HomeScreen from './components/HomeScreen/index';
 import LoginScreen from './components/Login';
-
-import CreateOrder from './components/CreateOrder/index';
+import OrderDetailsScreen from './components/OrderDetails/index';
 import Profile from './components/Profile/index';
 import ViewOrders from './components/ViewOrders/index';
 
@@ -35,7 +35,7 @@ const LoadingScreen: React.FC = () => (
     colors={Colors.gradients.main}
     style={styles.loadingContainer}
   >
-    <ActivityIndicator size="large" color={Colors.primary.lavender} />
+    <ActivityIndicator size="large" color={Colors.primary.green} />
   </LinearGradient>
 );
 
@@ -63,6 +63,27 @@ const DrawerNavigator: React.FC = () => {
   );
 };
 
+// Authenticated Stack Navigator
+const AuthenticatedNavigator: React.FC = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="Home"
+        component={DrawerNavigator}
+        options={{ animation: 'fade' }}
+      />
+      <Stack.Screen
+        name="OrderDetails"
+        component={OrderDetailsScreen}
+        options={{ 
+          animation: 'slide_from_right',
+          headerShown: false 
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 // Main Navigation Component
 const Navigation: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -70,23 +91,24 @@ const Navigation: React.FC = () => {
   if (isLoading) {
     return <LoadingScreen />;
   }
+  console.log('User authentication status:', user ? 'Logged in' : 'Not logged in');
 
   return (
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {user ? (
-          <Stack.Screen
-            name="Home"
-            component={DrawerNavigator}
-            options={{ animation: 'fade' }}
-          />
-        ) : (
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ animation: 'slide_from_right' }}
-          />
-        )}
-      </Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {user ? (
+        <Stack.Screen
+          name="Home"
+          component={AuthenticatedNavigator}
+          options={{ animation: 'fade' }}
+        />
+      ) : (
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ animation: 'slide_from_right' }}
+        />
+      )}
+    </Stack.Navigator>
   );
 };
 

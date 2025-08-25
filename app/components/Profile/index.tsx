@@ -1,171 +1,341 @@
-// app/components/Profile/index.tsx
-import { Feather, MaterialIcons } from '@expo/vector-icons';
+// app/Profile/index.tsx
+import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
-import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  Alert,
   SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { Colors, Spacing, Typography, createShadow } from '../../theme';
+import { BorderRadius, Colors, createElevation, Spacing, Typography } from '../../theme';
 import { RootStackParamList } from '../../types/navigation';
 
-interface ProfileProps {
+interface ProfileScreenProps {
   navigation: DrawerNavigationProp<RootStackParamList, 'Profile'>;
 }
 
 interface ProfileOption {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: keyof typeof MaterialIcons.glyphMap | keyof typeof Ionicons.glyphMap | keyof typeof Feather.glyphMap;
+  iconFamily: 'material' | 'ionicons' | 'feather';
   title: string;
-  subtitle: string;
-  iconColor: string;
+  subtitle?: string;
+  value?: string;
+  action?: 'navigate' | 'toggle' | 'logout';
+  hasToggle?: boolean;
+  isDanger?: boolean;
 }
 
-const Profile: React.FC<ProfileProps> = ({ navigation }) => {
+const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const { user, logout } = useAuth();
+  const [notifications, setNotifications] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
 
-  const profileOptions: ProfileOption[] = [
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Logout', 
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+          },
+        },
+      ]
+    );
+  };
+
+  const handleEditProfile = () => {
+    Alert.alert('Edit Profile', 'Profile editing feature coming soon!');
+  };
+
+  const profileSections: { title: string; options: ProfileOption[] }[] = [
     {
-      icon: 'person',
-      title: 'Personal Information',
-      subtitle: 'Update your personal details',
-      iconColor: Colors.primary.lavender,
+      title: 'Account',
+      options: [
+        {
+          icon: 'person',
+          iconFamily: 'material',
+          title: 'Personal Information',
+          subtitle: 'Name, email, phone',
+          action: 'navigate',
+        },
+        {
+          icon: 'location-on',
+          iconFamily: 'material',
+          title: 'Addresses',
+          subtitle: 'Manage delivery addresses',
+          action: 'navigate',
+        },
+        {
+          icon: 'payment',
+          iconFamily: 'material',
+          title: 'Payment Methods',
+          subtitle: 'Cards and payment options',
+          action: 'navigate',
+        },
+      ],
     },
     {
-      icon: 'location-on',
-      title: 'Delivery Addresses',
-      subtitle: 'Manage your addresses',
-      iconColor: Colors.primary.pink,
+      title: 'Preferences',
+      options: [
+        {
+          icon: 'notifications',
+          iconFamily: 'material',
+          title: 'Push Notifications',
+          hasToggle: true,
+          action: 'toggle',
+        },
+        {
+          icon: 'moon',
+          iconFamily: 'ionicons',
+          title: 'Dark Mode',
+          hasToggle: true,
+          action: 'toggle',
+        },
+        {
+          icon: 'language',
+          iconFamily: 'material',
+          title: 'Language',
+          value: 'English',
+          action: 'navigate',
+        },
+      ],
     },
     {
-      icon: 'payment',
-      title: 'Payment Methods',
-      subtitle: 'Add or remove payment methods',
-      iconColor: Colors.primary.plum,
+      title: 'Support',
+      options: [
+        {
+          icon: 'help-circle',
+          iconFamily: 'feather',
+          title: 'Help Center',
+          action: 'navigate',
+        },
+        {
+          icon: 'message-circle',
+          iconFamily: 'feather',
+          title: 'Contact Support',
+          subtitle: 'Get help from our team',
+          action: 'navigate',
+        },
+        {
+          icon: 'info',
+          iconFamily: 'feather',
+          title: 'About',
+          action: 'navigate',
+        },
+        {
+          icon: 'file-text',
+          iconFamily: 'feather',
+          title: 'Terms & Privacy',
+          action: 'navigate',
+        },
+      ],
     },
     {
-      icon: 'notifications',
-      title: 'Notifications',
-      subtitle: 'Configure notification preferences',
-      iconColor: '#87CEEB',
-    },
-    {
-      icon: 'security',
-      title: 'Security',
-      subtitle: 'Password and authentication',
-      iconColor: Colors.primary.mint,
-    },
-    {
-      icon: 'help',
-      title: 'Help & Support',
-      subtitle: 'Get help and contact support',
-      iconColor: Colors.primary.peach,
+      title: 'Actions',
+      options: [
+        {
+          icon: 'log-out',
+          iconFamily: 'feather',
+          title: 'Logout',
+          isDanger: true,
+          action: 'logout',
+        },
+      ],
     },
   ];
 
-  const handleLogout = async () => {
-    await logout();
+  const renderIcon = (option: ProfileOption) => {
+    const iconColor = option.isDanger ? Colors.text.error : Colors.text.secondary;
+    const iconSize = 22;
+
+    switch (option.iconFamily) {
+      case 'material':
+        return <MaterialIcons name={option.icon as any} size={iconSize} color={iconColor} />;
+      case 'ionicons':
+        return <Ionicons name={option.icon as any} size={iconSize} color={iconColor} />;
+      case 'feather':
+        return <Feather name={option.icon as any} size={iconSize} color={iconColor} />;
+      default:
+        return <MaterialIcons name={option.icon as any} size={iconSize} color={iconColor} />;
+    }
+  };
+
+  const handleOptionPress = (option: ProfileOption) => {
+    switch (option.action) {
+      case 'logout':
+        handleLogout();
+        break;
+      case 'navigate':
+        Alert.alert(option.title, `${option.title} feature coming soon!`);
+        break;
+      default:
+        break;
+    }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={Colors.gradients.main}
-        style={styles.gradient}
-      >
+    <>
+      <StatusBar backgroundColor={Colors.primary.teal} barStyle="light-content" />
+      <SafeAreaView style={styles.container}>
+        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Feather name="arrow-left" size={24} color={Colors.text.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-            <Feather name="menu" size={24} color={Colors.text.primary} />
-          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Feather name="arrow-left" size={24} color={Colors.text.white} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Profile</Text>
+            <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
+              <Feather name="menu" size={24} color={Colors.text.white} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <ScrollView
+        <ScrollView 
           style={styles.content}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
           {/* Profile Header */}
           <View style={styles.profileHeader}>
-            <LinearGradient
-              colors={Colors.gradients.profile}
-              style={styles.avatarGradient}
-            >
-              <Feather name="user" size={50} color={Colors.text.white} />
-            </LinearGradient>
+            <View style={styles.profileImageContainer}>
+              <View style={styles.profileImage}>
+                <Feather name="user" size={50} color={Colors.text.white} />
+              </View>
+              <TouchableOpacity style={styles.cameraButton}>
+                <MaterialIcons name="camera-alt" size={18} color={Colors.text.white} />
+              </TouchableOpacity>
+            </View>
             <Text style={styles.userName}>{user?.name || 'User Name'}</Text>
             <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
-
-            <TouchableOpacity style={styles.editButton}>
-              <LinearGradient
-                colors={Colors.gradients.button}
-                style={styles.editGradient}
-              >
-                <Feather name="edit-2" size={16} color={Colors.text.white} />
-                <Text style={styles.editButtonText}>Edit Profile</Text>
-              </LinearGradient>
+            
+            <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+              <Feather name="edit-2" size={16} color={Colors.primary.green} />
+              <Text style={styles.editButtonText}>Edit Profile</Text>
             </TouchableOpacity>
+
+            {/* Stats Row */}
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>15</Text>
+                <Text style={styles.statLabel}>Orders</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>3</Text>
+                <Text style={styles.statLabel}>Active</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>12</Text>
+                <Text style={styles.statLabel}>Completed</Text>
+              </View>
+            </View>
           </View>
 
           {/* Profile Options */}
-          <View style={styles.optionsContainer}>
-            {profileOptions.map((option, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.optionCard}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.optionIcon, { backgroundColor: option.iconColor + '20' }]}>
-                  <MaterialIcons name={option.icon} size={24} color={option.iconColor} />
-                </View>
-                <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>{option.title}</Text>
-                  <Text style={styles.optionSubtitle}>{option.subtitle}</Text>
-                </View>
-                <Feather name="chevron-right" size={20} color={Colors.text.light} />
-              </TouchableOpacity>
-            ))}
-          </View>
+          {profileSections.map((section, sectionIndex) => (
+            <View key={sectionIndex} style={styles.section}>
+              <Text style={styles.sectionTitle}>{section.title}</Text>
+              <View style={styles.sectionContent}>
+                {section.options.map((option, optionIndex) => (
+                  <TouchableOpacity
+                    key={optionIndex}
+                    style={[
+                      styles.optionItem,
+                      optionIndex === section.options.length - 1 && styles.lastOption,
+                    ]}
+                    onPress={() => handleOptionPress(option)}
+                    activeOpacity={option.hasToggle ? 1 : 0.7}
+                  >
+                    <View style={styles.optionLeft}>
+                      <View style={[
+                        styles.iconContainer,
+                        option.isDanger && styles.iconContainerDanger,
+                      ]}>
+                        {renderIcon(option)}
+                      </View>
+                      <View style={styles.optionContent}>
+                        <Text style={[
+                          styles.optionTitle,
+                          option.isDanger && styles.optionTitleDanger,
+                        ]}>
+                          {option.title}
+                        </Text>
+                        {option.subtitle && (
+                          <Text style={styles.optionSubtitle}>{option.subtitle}</Text>
+                        )}
+                      </View>
+                    </View>
+                    <View style={styles.optionRight}>
+                      {option.hasToggle ? (
+                        <Switch
+                          value={option.title === 'Push Notifications' ? notifications : darkMode}
+                          onValueChange={(value) => {
+                            if (option.title === 'Push Notifications') {
+                              setNotifications(value);
+                            } else if (option.title === 'Dark Mode') {
+                              setDarkMode(value);
+                            }
+                          }}
+                          trackColor={{ 
+                            false: Colors.ui.border, 
+                            true: Colors.primary.green + '50' 
+                          }}
+                          thumbColor={
+                            (option.title === 'Push Notifications' ? notifications : darkMode)
+                              ? Colors.primary.green
+                              : Colors.background.primary
+                          }
+                        />
+                      ) : option.value ? (
+                        <Text style={styles.optionValue}>{option.value}</Text>
+                      ) : !option.isDanger ? (
+                        <Feather name="chevron-right" size={20} color={Colors.text.tertiary} />
+                      ) : null}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          ))}
 
-          {/* Logout Button */}
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={handleLogout}
-            activeOpacity={0.8}
-          >
-            <Feather name="log-out" size={20} color={Colors.text.error} />
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
+          {/* App Version */}
+          <View style={styles.versionContainer}>
+            <Text style={styles.versionText}>JaviApp Version 1.0.0</Text>
+            <Text style={styles.copyrightText}>© 2024 JaviApp. All rights reserved.</Text>
+          </View>
         </ScrollView>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    backgroundColor: Colors.gradients.main[0],
-  },
-  gradient: {
-    flex: 1,
+    backgroundColor: Colors.background.secondary,
   },
   header: {
+    backgroundColor: Colors.primary.teal,
+    ...createElevation(2),
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
+    paddingVertical: Spacing.md,
   },
   backButton: {
     padding: Spacing.xs,
@@ -174,35 +344,47 @@ const styles = StyleSheet.create({
     padding: Spacing.xs,
   },
   headerTitle: {
-    fontSize: Typography.fontSize.xxl,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.primary,
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.semiBold,
+    color: Colors.text.white,
   },
   content: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
   },
-  // ProfileScreen specific styles
   profileHeader: {
+    backgroundColor: Colors.background.primary,
     alignItems: 'center',
-    paddingVertical: Spacing.xxl,
-    backgroundColor: Colors.ui.backgroundOpacity,
-    borderRadius: 20,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.xl,
-    ...createShadow(5),
+    paddingVertical: Spacing.xl,
+    marginBottom: Spacing.xs,
   },
-  avatarGradient: {
+  profileImageContainer: {
+    position: 'relative',
+    marginBottom: Spacing.md,
+  },
+  profileImage: {
     width: 100,
     height: 100,
-    borderRadius: 50,
+    borderRadius: BorderRadius.round,
+    backgroundColor: Colors.primary.teal,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.md,
-    ...createShadow(8),
+    ...createElevation(2),
+  },
+  cameraButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.round,
+    backgroundColor: Colors.primary.green,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.background.primary,
   },
   userName: {
     fontSize: Typography.fontSize.xxl,
@@ -216,72 +398,126 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   editButton: {
-    marginTop: Spacing.sm,
-  },
-  editGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
-    borderRadius: 20,
-    ...createShadow(5),
-  },
-  editButtonText: {
-    color: Colors.text.white,
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semiBold,
-    marginLeft: Spacing.xs,
-  },
-  optionsContainer: {
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.primary.green,
     marginBottom: Spacing.xl,
   },
-  optionCard: {
+  editButtonText: {
+    marginLeft: Spacing.xs,
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.primary.green,
+  },
+  statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.ui.backgroundOpacity,
-    borderRadius: 15,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    ...createShadow(2),
+    paddingHorizontal: Spacing.xl,
   },
-  optionIcon: {
-    width: 45,
-    height: 45,
-    borderRadius: 12,
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.text.primary,
+    marginBottom: Spacing.xs,
+  },
+  statLabel: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.text.secondary,
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: Colors.ui.divider,
+  },
+  section: {
+    marginTop: Spacing.xs,
+  },
+  sectionTitle: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semiBold,
+    color: Colors.text.secondary,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.background.secondary,
+  },
+  sectionContent: {
+    backgroundColor: Colors.background.primary,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.ui.divider,
+  },
+  lastOption: {
+    borderBottomWidth: 0,
+  },
+  optionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.round,
+    backgroundColor: Colors.background.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
+  },
+  iconContainerDanger: {
+    backgroundColor: Colors.text.error + '10',
   },
   optionContent: {
     flex: 1,
   },
   optionTitle: {
     fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semiBold,
     color: Colors.text.primary,
     marginBottom: 2,
   },
+  optionTitleDanger: {
+    color: Colors.text.error,
+  },
   optionSubtitle: {
     fontSize: Typography.fontSize.xs,
-    color: Colors.text.secondary,
+    color: Colors.text.tertiary,
   },
-  logoutButton: {
+  optionRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 107, 107, 0.1)',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: 15,
-    marginBottom: Spacing.xxl,
-    ...createShadow(3),
   },
-  logoutText: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.error,
-    marginLeft: Spacing.sm,
+  optionValue: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    marginRight: Spacing.xs,
   },
-  })
+  versionContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+    marginTop: Spacing.xl,
+  },
+  versionText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.tertiary,
+    marginBottom: Spacing.xs,
+  },
+  copyrightText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.text.tertiary,
+  },
+});
 
-export default Profile
+export default ProfileScreen;
