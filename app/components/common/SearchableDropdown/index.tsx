@@ -1,17 +1,18 @@
 import { Feather } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Dimensions,
-    Keyboard,
-    Modal,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Dimensions,
+  Keyboard,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { Colors } from '../../../theme';
-import { searchableDropdownStyles as styles } from './searchableDropdown.styles';
+import { useTheme } from '../../../theme/themeContext';
+import { useSearchableDropdownStyles } from './searchableDropdown.styles';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -45,6 +46,11 @@ function SearchableDropdown<T>({
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const buttonRef = useRef<View>(null);
   const searchInputRef = useRef<TextInput>(null);
+
+  
+    const { theme } = useTheme();
+    const styles = useSearchableDropdownStyles(theme);
+
 
   // Get display text for selected value
   const selectedItem = data.find(item => keyExtractor(item) === value);

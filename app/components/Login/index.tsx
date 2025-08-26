@@ -10,15 +10,16 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { BorderRadius, Colors, Spacing, Typography, createElevation } from '../../theme';
+import { Colors } from '../../theme';
+import { useTheme } from '../../theme/themeContext';
 import { NavigationProp } from '../../types/navigation';
+import { useLoginStyles } from './login.styles';
 
 const { width, height } = Dimensions.get('window');
 
@@ -35,7 +36,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   
   const { login } = useAuth();
   
+  
   // Animation values
+  const { theme } = useTheme();
+  const styles = useLoginStyles(theme);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -133,7 +137,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           <View style={styles.headerSection}>
             <View style={styles.logoContainer}>
               <View style={styles.logoCircle}>
-                <MaterialIcons name="local-shipping" size={50} color={Colors.primary.green} />
+                <MaterialIcons name="local-shipping" size={50} color={theme.colors.primary.main} />
               </View>
             </View>
             <Text style={styles.appTitle}>Welcome Back</Text>
@@ -145,7 +149,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             {/* Email Input */}
             <View style={styles.inputContainer}>
               <View style={styles.inputWrapper}>
-                <Feather name="mail" size={20} color={Colors.text.secondary} />
+                <Feather name="mail" size={20} color={theme.colors.text. secondary} />
                 <TextInput
                   style={styles.input}
                   placeholder="Email address"
@@ -163,7 +167,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             {/* Password Input */}
             <View style={styles.inputContainer}>
               <View style={styles.inputWrapper}>
-                <Feather name="lock" size={20} color={Colors.text.secondary} />
+                <Feather name="lock" size={20} color={theme.colors.text. secondary} />
                 <TextInput
                   style={styles.input}
                   placeholder="Password"
@@ -180,7 +184,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                   <Feather
                     name={showPassword ? 'eye' : 'eye-off'}
                     size={20}
-                    color={Colors.text.secondary}
+                    color={theme.colors.text. secondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -202,7 +206,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               activeOpacity={0.8}
             >
               {isLoading ? (
-                <ActivityIndicator color={Colors.text.white} />
+                <ActivityIndicator color={theme.colors.text.inverse} />
               ) : (
                 <Text style={styles.loginButtonText}>Sign In</Text>
               )}
@@ -227,7 +231,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           {/* Permissions Status */}
           {!permissionsGranted && (
             <View style={styles.permissionStatus}>
-              <MaterialIcons name="info-outline" size={16} color={Colors.text.error} />
+              <MaterialIcons name="info-outline" size={16} color={theme.colors.semantic.error} />
               <Text style={styles.permissionText}>
                 Camera and location permissions required
               </Text>
@@ -239,141 +243,5 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.primary,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: Spacing.xl,
-  },
-  headerSection: {
-    alignItems: 'center',
-    marginTop: height * 0.1,
-    marginBottom: Spacing.xxxl,
-  },
-  logoContainer: {
-    marginBottom: Spacing.xl,
-  },
-  logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: BorderRadius.round,
-    backgroundColor: Colors.background.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...createElevation(2),
-  },
-  appTitle: {
-    fontSize: Typography.fontSize.xxxl,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.primary,
-    marginBottom: Spacing.xs,
-  },
-  subtitle: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-  },
-  formSection: {
-    flex: 1,
-  },
-  inputContainer: {
-    marginBottom: Spacing.lg,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.background.inputBar,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    height: 50,
-    borderWidth: 1,
-    borderColor: Colors.ui.border,
-  },
-  input: {
-    flex: 1,
-    marginLeft: Spacing.sm,
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.primary,
-  },
-  eyeIcon: {
-    padding: Spacing.xs,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: Spacing.xl,
-  },
-  forgotPasswordText: {
-    color: Colors.primary.darkGreen,
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  loginButton: {
-    backgroundColor: Colors.primary.green,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 50,
-    ...createElevation(2),
-  },
-  loginButtonDisabled: {
-    backgroundColor: Colors.buttons.disabled,
-  },
-  loginButtonText: {
-    color: Colors.text.white,
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.semiBold,
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: Spacing.xl,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.ui.divider,
-  },
-  dividerText: {
-    marginHorizontal: Spacing.md,
-    color: Colors.text.secondary,
-    fontSize: Typography.fontSize.sm,
-  },
-  signUpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: Spacing.md,
-  },
-  signUpText: {
-    color: Colors.text.secondary,
-    fontSize: Typography.fontSize.md,
-  },
-  signUpLink: {
-    color: Colors.primary.darkGreen,
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semiBold,
-  },
-  permissionStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFF3E0',
-    padding: Spacing.sm,
-    borderRadius: BorderRadius.sm,
-    marginTop: Spacing.lg,
-  },
-  permissionText: {
-    color: Colors.text.error,
-    fontSize: Typography.fontSize.xs,
-    marginLeft: Spacing.xs,
-  },
-});
 
 export default LoginScreen;

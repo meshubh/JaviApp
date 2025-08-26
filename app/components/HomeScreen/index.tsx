@@ -1,4 +1,3 @@
-// app/HomeScreen/index.tsx
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import React, { useEffect, useRef } from 'react';
@@ -7,14 +6,14 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { BorderRadius, Colors, createElevation, Spacing, Typography } from '../../theme';
+import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
+import { useHomeStyles } from './home.styles';
 
 interface HomeScreenProps {
   navigation: DrawerNavigationProp<RootStackParamList, 'Home'>;
@@ -31,6 +30,9 @@ interface ActionCard {
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const styles = useHomeStyles(theme);
+  
   const cardAnimations = useRef([
     new Animated.Value(0),
     new Animated.Value(0),
@@ -61,24 +63,24 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       title: 'Create Order',
       subtitle: 'Start a new order',
       icon: 'add-shopping-cart',
-      iconColor: Colors.primary.green,
-      backgroundColor: '#E8F5E9',
+      iconColor: theme.colors.primary.main,
+      backgroundColor: theme.colors.primary.light,
       screen: 'CreateOrder',
     },
     {
       title: 'Order History',
       subtitle: 'View past orders',
       icon: 'receipt-long',
-      iconColor: Colors.primary.darkGreen,
-      backgroundColor: '#E0F2F1',
+      iconColor: theme.colors.secondary.main,
+      backgroundColor: theme.colors.secondary.light,
       screen: 'ViewOrders',
     },
     {
       title: 'My Profile',
       subtitle: 'Account settings',
       icon: 'account-circle',
-      iconColor: Colors.primary.teal,
-      backgroundColor: '#E3F2FD',
+      iconColor: theme.colors.primary.dark,
+      backgroundColor: theme.colors.background.tertiary,
       screen: 'Profile',
     },
   ];
@@ -93,7 +95,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar backgroundColor={Colors.primary.teal} barStyle="light-content" />
+      <StatusBar backgroundColor={theme.colors.primary.main} barStyle="dark-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -102,17 +104,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               onPress={() => navigation.openDrawer()} 
               style={styles.menuButton}
             >
-              <Feather name="menu" size={24} color={Colors.text.white} />
+              <Feather name="menu" size={24} color={theme.colors.text.onPrimary} />
             </TouchableOpacity>
             
-            <Text style={styles.headerTitle}>JaviApp</Text>
+            <Text style={styles.headerTitle}>Javi Logistics</Text>
             
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.headerActionButton}>
-                <Feather name="search" size={22} color={Colors.text.white} />
+                <Feather name="search" size={22} color={theme.colors.text.onPrimary} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.headerActionButton}>
-                <Ionicons name="notifications-outline" size={22} color={Colors.text.white} />
+                <Ionicons name="notifications-outline" size={22} color={theme.colors.text.onPrimary} />
                 <View style={styles.notificationDot} />
               </TouchableOpacity>
             </View>
@@ -157,7 +159,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               >
                 <TouchableOpacity
                   style={styles.actionCard}
-                  onPress={() => navigation.navigate(card.screen)}
+                  onPress={() => navigation.navigate(card.screen as any)}
                   activeOpacity={0.7}
                 >
                   <View style={[styles.iconContainer, { backgroundColor: card.backgroundColor }]}>
@@ -167,7 +169,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     <Text style={styles.cardTitle}>{card.title}</Text>
                     <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
                   </View>
-                  <Feather name="chevron-right" size={20} color={Colors.text.tertiary} />
+                  <Feather name="chevron-right" size={20} color={theme.colors.text.tertiary} />
                 </TouchableOpacity>
               </Animated.View>
             ))}
@@ -181,7 +183,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 <Text style={styles.statNumber}>12</Text>
                 <Text style={styles.statLabel}>Total Orders</Text>
                 <View style={styles.statTrend}>
-                  <Feather name="trending-up" size={14} color={Colors.primary.green} />
+                  <Feather name="trending-up" size={14} color={theme.colors.semantic.success} />
                   <Text style={styles.statTrendText}>+15%</Text>
                 </View>
               </View>
@@ -189,26 +191,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 <Text style={styles.statNumber}>3</Text>
                 <Text style={styles.statLabel}>Pending</Text>
                 <View style={styles.statTrend}>
-                  <Feather name="clock" size={14} color={Colors.text.warning} />
-                  <Text style={[styles.statTrendText, { color: Colors.text.warning }]}>Active</Text>
-                </View>
-              </View>
-            </View>
-            <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
-                <Text style={styles.statNumber}>9</Text>
-                <Text style={styles.statLabel}>Completed</Text>
-                <View style={styles.statTrend}>
-                  <Feather name="check-circle" size={14} color={Colors.primary.green} />
-                  <Text style={styles.statTrendText}>Done</Text>
-                </View>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statNumber}>$1,234</Text>
-                <Text style={styles.statLabel}>Total Spent</Text>
-                <View style={styles.statTrend}>
-                  <Feather name="dollar-sign" size={14} color={Colors.primary.green} />
-                  <Text style={styles.statTrendText}>This month</Text>
+                  <Feather name="clock" size={14} color={theme.colors.semantic.warning} />
+                  <Text style={[styles.statTrendText, { color: theme.colors.semantic.warning }]}>
+                    Active
+                  </Text>
                 </View>
               </View>
             </View>
@@ -219,7 +205,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <Text style={styles.sectionTitle}>Recent Activity</Text>
             <View style={styles.activityItem}>
               <View style={styles.activityIcon}>
-                <Feather name="package" size={16} color={Colors.primary.green} />
+                <Feather name="package" size={16} color={theme.colors.semantic.success} />
               </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityText}>Order #1234 delivered</Text>
@@ -228,7 +214,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
             <View style={styles.activityItem}>
               <View style={styles.activityIcon}>
-                <Feather name="truck" size={16} color={Colors.text.warning} />
+                <Feather name="truck" size={16} color={theme.colors.semantic.warning} />
               </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityText}>Order #1235 shipped</Text>
@@ -241,177 +227,5 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.secondary,
-  },
-  header: {
-    backgroundColor: Colors.primary.teal,
-    ...createElevation(2),
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-  },
-  menuButton: {
-    padding: Spacing.xs,
-  },
-  headerTitle: {
-    fontSize: Typography.fontSize.xl,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.white,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerActionButton: {
-    padding: Spacing.xs,
-    marginLeft: Spacing.md,
-  },
-  notificationDot: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.text.error,
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: Spacing.xxl,
-  },
-  welcomeSection: {
-    backgroundColor: Colors.background.primary,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.xl,
-    marginBottom: Spacing.xs,
-  },
-  welcomeText: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.secondary,
-  },
-  userName: {
-    fontSize: Typography.fontSize.xxl,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.primary,
-    marginTop: Spacing.xs,
-  },
-  dateText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.tertiary,
-    marginTop: Spacing.xs,
-  },
-  sectionContainer: {
-    backgroundColor: Colors.background.primary,
-    marginTop: Spacing.xs,
-    paddingVertical: Spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.primary,
-    marginBottom: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-  },
-  actionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.divider,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.round,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.md,
-  },
-  cardContent: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.text.primary,
-    marginBottom: 2,
-  },
-  cardSubtitle: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.sm,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: Colors.background.card,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    marginHorizontal: Spacing.xs,
-    ...createElevation(1),
-  },
-  statNumber: {
-    fontSize: Typography.fontSize.xxl,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.primary,
-    marginBottom: Spacing.xs,
-  },
-  statLabel: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.text.secondary,
-    marginBottom: Spacing.xs,
-  },
-  statTrend: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statTrendText: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.primary.green,
-    marginLeft: Spacing.xs,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.sm,
-  },
-  activityIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.round,
-    backgroundColor: Colors.background.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.md,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.primary,
-    marginBottom: 2,
-  },
-  activityTime: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.text.tertiary,
-  },
-});
 
 export default HomeScreen;

@@ -7,15 +7,16 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Switch,
   Text,
   TouchableOpacity,
   View
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { BorderRadius, Colors, createElevation, Spacing, Typography } from '../../theme';
+import { Colors } from '../../theme';
+import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
+import { useProfileStyles } from './profile.styles';
 
 interface ProfileScreenProps {
   navigation: DrawerNavigationProp<RootStackParamList, 'Profile'>;
@@ -36,6 +37,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+
+  const { theme } = useTheme();
+  const styles = useProfileStyles(theme);
 
   const handleLogout = () => {
     Alert.alert(
@@ -156,7 +160,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   ];
 
   const renderIcon = (option: ProfileOption) => {
-    const iconColor = option.isDanger ? Colors.text.error : Colors.text.secondary;
+    const iconColor = option.isDanger ? theme.colors.semantic.error : theme.colors.text. secondary;
     const iconSize = 22;
 
     switch (option.iconFamily) {
@@ -186,17 +190,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar backgroundColor={Colors.primary.teal} barStyle="light-content" />
+      <StatusBar backgroundColor={theme.colors.secondary.main} barStyle="light-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Feather name="arrow-left" size={24} color={Colors.text.white} />
+              <Feather name="arrow-left" size={24} color={theme.colors.text.inverse} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Profile</Text>
             <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-              <Feather name="menu" size={24} color={Colors.text.white} />
+              <Feather name="menu" size={24} color={theme.colors.text.inverse} />
             </TouchableOpacity>
           </View>
         </View>
@@ -210,17 +214,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <View style={styles.profileHeader}>
             <View style={styles.profileImageContainer}>
               <View style={styles.profileImage}>
-                <Feather name="user" size={50} color={Colors.text.white} />
+                <Feather name="user" size={50} color={theme.colors.text.inverse} />
               </View>
               <TouchableOpacity style={styles.cameraButton}>
-                <MaterialIcons name="camera-alt" size={18} color={Colors.text.white} />
+                <MaterialIcons name="camera-alt" size={18} color={theme.colors.text.inverse} />
               </TouchableOpacity>
             </View>
             <Text style={styles.userName}>{user?.name || 'User Name'}</Text>
             <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
             
             <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
-              <Feather name="edit-2" size={16} color={Colors.primary.green} />
+              <Feather name="edit-2" size={16} color={theme.colors.primary.main} />
               <Text style={styles.editButtonText}>Edit Profile</Text>
             </TouchableOpacity>
 
@@ -289,13 +293,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                             }
                           }}
                           trackColor={{ 
-                            false: Colors.ui.border, 
-                            true: Colors.primary.green + '50' 
+                            false: theme.colors.border.primary, 
+                            true: theme.colors.primary.main + '50' 
                           }}
                           thumbColor={
                             (option.title === 'Push Notifications' ? notifications : darkMode)
-                              ? Colors.primary.green
-                              : Colors.background.primary
+                              ? theme.colors.primary.main
+                              : theme.colors.background.primary
                           }
                         />
                       ) : option.value ? (
@@ -320,204 +324,5 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.secondary,
-  },
-  header: {
-    backgroundColor: Colors.primary.teal,
-    ...createElevation(2),
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-  },
-  backButton: {
-    padding: Spacing.xs,
-  },
-  menuButton: {
-    padding: Spacing.xs,
-  },
-  headerTitle: {
-    fontSize: Typography.fontSize.xl,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.white,
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: Spacing.xxxl,
-  },
-  profileHeader: {
-    backgroundColor: Colors.background.primary,
-    alignItems: 'center',
-    paddingVertical: Spacing.xl,
-    marginBottom: Spacing.xs,
-  },
-  profileImageContainer: {
-    position: 'relative',
-    marginBottom: Spacing.md,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: BorderRadius.round,
-    backgroundColor: Colors.primary.teal,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...createElevation(2),
-  },
-  cameraButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.round,
-    backgroundColor: Colors.primary.green,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.background.primary,
-  },
-  userName: {
-    fontSize: Typography.fontSize.xxl,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.primary,
-    marginBottom: Spacing.xs,
-  },
-  userEmail: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.secondary,
-    marginBottom: Spacing.lg,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.primary.green,
-    marginBottom: Spacing.xl,
-  },
-  editButtonText: {
-    marginLeft: Spacing.xs,
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.primary.green,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: Typography.fontSize.xl,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.primary,
-    marginBottom: Spacing.xs,
-  },
-  statLabel: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.text.secondary,
-  },
-  statDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: Colors.ui.divider,
-  },
-  section: {
-    marginTop: Spacing.xs,
-  },
-  sectionTitle: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.secondary,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.sm,
-    backgroundColor: Colors.background.secondary,
-  },
-  sectionContent: {
-    backgroundColor: Colors.background.primary,
-  },
-  optionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.divider,
-  },
-  lastOption: {
-    borderBottomWidth: 0,
-  },
-  optionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.round,
-    backgroundColor: Colors.background.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.md,
-  },
-  iconContainerDanger: {
-    backgroundColor: Colors.text.error + '10',
-  },
-  optionContent: {
-    flex: 1,
-  },
-  optionTitle: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.primary,
-    marginBottom: 2,
-  },
-  optionTitleDanger: {
-    color: Colors.text.error,
-  },
-  optionSubtitle: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.text.tertiary,
-  },
-  optionRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  optionValue: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
-    marginRight: Spacing.xs,
-  },
-  versionContainer: {
-    alignItems: 'center',
-    paddingVertical: Spacing.xl,
-    marginTop: Spacing.xl,
-  },
-  versionText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.tertiary,
-    marginBottom: Spacing.xs,
-  },
-  copyrightText: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.text.tertiary,
-  },
-});
 
 export default ProfileScreen;

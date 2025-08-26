@@ -9,15 +9,16 @@ import {
   RefreshControl,
   SafeAreaView,
   StatusBar,
-  StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { OrderListItem, orderService, PaginatedResponse } from '../../services/OrderService';
-import { BorderRadius, Colors, createElevation, Spacing, Typography } from '../../theme';
+import { Colors } from '../../theme';
+import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
+import { useViewOrdersStyles } from './viewOrders.styles';
 
 interface ViewOrdersScreenProps {
   navigation: DrawerNavigationProp<RootStackParamList, 'ViewOrders'>;
@@ -39,6 +40,9 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const { theme } = useTheme();
+  const styles = useViewOrdersStyles(theme);
 
   useEffect(() => {
     loadOrders(true);
@@ -203,14 +207,14 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
         <View style={styles.orderBody}>
           <View style={styles.locationInfo}>
             <View style={styles.locationRow}>
-              <Feather name="map-pin" size={14} color={Colors.primary.green} />
+              <Feather name="map-pin" size={14} color={theme.colors.primary.main} />
               <Text style={styles.locationText} numberOfLines={1}>
                 {item.pickup_city || item.pickup_address_text?.substring(0, 30)}
               </Text>
             </View>
             <Feather name="arrow-down" size={14} color={Colors.text.tertiary} />
             <View style={styles.locationRow}>
-              <Feather name="map-pin" size={14} color={Colors.text.error} />
+              <Feather name="map-pin" size={14} color={theme.colors.semantic.error} />
               <Text style={styles.locationText} numberOfLines={1}>
                 {item.drop_city || item.drop_address_text?.substring(0, 30)}
               </Text>
@@ -250,7 +254,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
             </TouchableOpacity>
             <TouchableOpacity style={styles.trackButton}>
               <Text style={styles.trackButtonText}>Track</Text>
-              <Feather name="chevron-right" size={16} color={Colors.primary.green} />
+              <Feather name="chevron-right" size={16} color={theme.colors.primary.main} />
             </TouchableOpacity>
           </View>
         )}
@@ -288,7 +292,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
     
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color={Colors.primary.teal} />
+        <ActivityIndicator size="small" color={theme.colors.secondary.main} />
       </View>
     );
   };
@@ -297,13 +301,13 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
 
   return (
     <>
-      <StatusBar backgroundColor={Colors.primary.teal} barStyle="light-content" />
+      <StatusBar backgroundColor={theme.colors.secondary.main} barStyle="light-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Feather name="arrow-left" size={24} color={Colors.text.white} />
+              <Feather name="arrow-left" size={24} color={theme.colors.text.inverse} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>My Orders</Text>
             <View style={styles.headerActions}>
@@ -311,10 +315,10 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
                 onPress={() => navigation.navigate('CreateOrder')} 
                 style={styles.addButton}
               >
-                <Feather name="plus" size={24} color={Colors.text.white} />
+                <Feather name="plus" size={24} color={theme.colors.text.inverse} />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-                <Feather name="menu" size={24} color={Colors.text.white} />
+                <Feather name="menu" size={24} color={theme.colors.text.inverse} />
               </TouchableOpacity>
             </View>
           </View>
@@ -346,7 +350,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
         {/* Orders List */}
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.primary.teal} />
+            <ActivityIndicator size="large" color={theme.colors.secondary.main} />
             <Text style={styles.loadingText}>Loading orders...</Text>
           </View>
         ) : (
@@ -368,8 +372,8 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
               <RefreshControl
                 refreshing={isRefreshing}
                 onRefresh={handleRefresh}
-                colors={[Colors.primary.teal]}
-                tintColor={Colors.primary.teal}
+                colors={[theme.colors.secondary.main]}
+                tintColor={theme.colors.secondary.main}
               />
             }
           />
@@ -378,255 +382,5 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.secondary,
-  },
-  header: {
-    backgroundColor: Colors.primary.teal,
-    ...createElevation(2),
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-  },
-  backButton: {
-    padding: Spacing.xs,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  addButton: {
-    padding: Spacing.xs,
-    marginRight: Spacing.sm,
-  },
-  menuButton: {
-    padding: Spacing.xs,
-  },
-  headerTitle: {
-    fontSize: Typography.fontSize.xl,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.white,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    backgroundColor: Colors.background.primary,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.divider,
-  },
-  filterTab: {
-    flex: 1,
-    paddingVertical: Spacing.sm,
-    alignItems: 'center',
-    marginHorizontal: Spacing.xs,
-    borderRadius: BorderRadius.md,
-  },
-  filterTabActive: {
-    backgroundColor: Colors.primary.green + '15',
-  },
-  filterText: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.text.secondary,
-  },
-  filterTextActive: {
-    color: Colors.primary.green,
-    fontWeight: Typography.fontWeight.semiBold,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: Spacing.md,
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.secondary,
-  },
-  listContent: {
-    paddingVertical: Spacing.md,
-  },
-  emptyListContent: {
-    flex: 1,
-  },
-  orderCard: {
-    backgroundColor: Colors.background.primary,
-    marginHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
-    ...createElevation(1),
-    position: 'relative',
-  },
-  orderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.md,
-  },
-  orderIdContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  orderIdLabel: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
-    marginRight: Spacing.xs,
-  },
-  orderId: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.primary,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
-  },
-  statusText: {
-    fontSize: Typography.fontSize.xs,
-    fontWeight: Typography.fontWeight.medium,
-    marginLeft: Spacing.xs,
-  },
-  orderBody: {
-    marginBottom: Spacing.md,
-  },
-  locationInfo: {
-    marginBottom: Spacing.sm,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: Spacing.xs,
-  },
-  locationText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.primary,
-    marginLeft: Spacing.xs,
-    flex: 1,
-  },
-  packageInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-  },
-  packageText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
-    marginLeft: Spacing.xs,
-  },
-  orderFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.ui.divider,
-  },
-  orderDateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  orderDate: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.tertiary,
-    marginLeft: Spacing.xs,
-  },
-  orderAmount: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.primary,
-  },
-  actionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.ui.divider,
-  },
-  cancelButton: {
-    paddingVertical: Spacing.xs,
-  },
-  cancelButtonText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.error,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  trackButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.xs,
-  },
-  trackButtonText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.primary.green,
-    fontWeight: Typography.fontWeight.medium,
-    marginRight: Spacing.xs,
-  },
-  overdueTag: {
-    position: 'absolute',
-    top: Spacing.sm,
-    right: Spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.text.warning + '20',
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.xs,
-  },
-  overdueText: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.text.warning,
-    marginLeft: 2,
-  },
-  separator: {
-    height: Spacing.sm,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-  },
-  emptyTitle: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.primary,
-    marginTop: Spacing.lg,
-  },
-  emptySubtitle: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.secondary,
-    marginTop: Spacing.sm,
-    textAlign: 'center',
-  },
-  createOrderButton: {
-    marginTop: Spacing.xl,
-    backgroundColor: Colors.primary.green,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-  },
-  createOrderButtonText: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.text.white,
-  },
-  footerLoader: {
-    paddingVertical: Spacing.lg,
-    alignItems: 'center',
-  },
-});
 
 export default ViewOrdersScreen;

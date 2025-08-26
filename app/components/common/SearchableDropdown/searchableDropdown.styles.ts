@@ -1,38 +1,40 @@
-import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, createElevation, Spacing, Typography } from '../../../theme';
+import { createStyles } from '../../../theme/createStyles';
 
-export const searchableDropdownStyles = StyleSheet.create({
+export const useSearchableDropdownStyles = createStyles((theme) => ({
   container: {
-    marginBottom: Spacing.lg,
+    marginBottom: theme.spacing.lg,
   },
   label: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.text.primary,
-    marginBottom: Spacing.xs,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
   },
   required: {
-    color: Colors.text.error,
+    color: theme.colors.semantic.error,
   },
   dropdownButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.background.inputBar,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
     height: 48,
     borderWidth: 1,
-    borderColor: Colors.ui.border,
+    borderColor: theme.colors.border.primary,
+  },
+  dropdownButtonFocused: {
+    borderColor: theme.colors.primary.main,
   },
   dropdownText: {
     flex: 1,
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.primary,
-    marginRight: Spacing.xs,
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.text.primary,
+    marginRight: theme.spacing.xs,
   },
   placeholderText: {
-    color: Colors.text.tertiary,
+    color: theme.colors.text.tertiary,
   },
   modalOverlay: {
     flex: 1,
@@ -43,25 +45,25 @@ export const searchableDropdownStyles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   dropdownContent: {
-    backgroundColor: Colors.background.primary,
-    borderRadius: BorderRadius.md,
-    ...createElevation(4),
+    backgroundColor: theme.colors.background.primary,
+    borderRadius: theme.borderRadius.md,
+    ...theme.elevation[4],
     borderWidth: 1,
-    borderColor: Colors.ui.border,
+    borderColor: theme.colors.border.primary,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.divider,
+    borderBottomColor: theme.colors.border.secondary,
   },
   searchInput: {
     flex: 1,
-    marginHorizontal: Spacing.sm,
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.primary,
+    marginHorizontal: theme.spacing.sm,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.primary,
   },
   listContainer: {
     maxHeight: 300,
@@ -70,28 +72,28 @@ export const searchableDropdownStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
     minHeight: 44,
   },
   selectedItem: {
-    backgroundColor: Colors.ui.backgroundSelected,
+    backgroundColor: theme.colors.primary.light,
   },
   optionText: {
     flex: 1,
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.primary,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.primary,
   },
   selectedText: {
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.primary.teal,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.primary.dark,
   },
   emptyContainer: {
-    padding: Spacing.lg,
+    padding: theme.spacing.lg,
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.tertiary,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.tertiary,
   },
-});
+}));

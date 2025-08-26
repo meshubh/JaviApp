@@ -1,8 +1,8 @@
 // app/CreateOrder/index.tsx
-import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
-import { useFocusEffect } from '@react-navigation/native'; // Add this import
+import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,7 +12,6 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Switch,
   Text,
   TextInput,
@@ -21,9 +20,10 @@ import {
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { Address, Contract, CreateOrderData, orderService } from '../../services/OrderService';
-import { BorderRadius, Colors, createElevation, Spacing, Typography } from '../../theme';
+import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
 import SearchableDropdown from '../common/SearchableDropdown';
+import { useCreateOrderStyles } from './createOrder.styles';
 
 interface CreateOrderProps {
   navigation: DrawerNavigationProp<RootStackParamList, 'CreateOrder'>;
@@ -31,6 +31,8 @@ interface CreateOrderProps {
 
 const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   const { token } = useAuth();
+  const { theme } = useTheme();
+  const styles = useCreateOrderStyles(theme);
   
   // Form state
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -61,12 +63,8 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     useCallback(() => {
       console.log('[CreateOrder] Screen focused - loading fresh data');
       loadInitialData();
-      
-      // Optional: Reset form when screen comes into focus
-      // You can comment this out if you want to preserve form data
       resetFormFields();
       
-      // Cleanup function (optional)
       return () => {
         console.log('[CreateOrder] Screen unfocused');
       };
@@ -77,7 +75,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     try {
       setIsLoadingData(true);
       
-      // Log to debug
       console.log('[CreateOrder] Fetching contracts and addresses...');
       
       const [contractsData, addressesData] = await Promise.all([
@@ -190,7 +187,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
             style: 'cancel',
             onPress: () => {
               resetFormFields();
-              loadInitialData(); // Reload fresh data
+              loadInitialData();
             },
           },
         ]
@@ -206,11 +203,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     }
   };
 
-  const resetForm = () => {
-    resetFormFields();
-  };
-
-  // Rest of your component remains the same...
   const onDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
@@ -222,7 +214,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary.teal} />
+          <ActivityIndicator size="large" color={theme.colors.primary.main} />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       </SafeAreaView>
@@ -231,24 +223,24 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar backgroundColor={Colors.primary.teal} barStyle="light-content" />
+      <StatusBar backgroundColor={theme.colors.primary.main} barStyle="dark-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Feather name="arrow-left" size={24} color={Colors.text.white} />
+              <Feather name="arrow-left" size={24} color={theme.colors.text.onPrimary} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Create Order</Text>
             <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-              <Feather name="menu" size={24} color={Colors.text.white} />
+              <Feather name="menu" size={24} color={theme.colors.text.onPrimary} />
             </TouchableOpacity>
           </View>
         </View>
         
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
+          style={{ flex: 1 }}
         >
           <ScrollView 
             style={styles.content}
@@ -278,14 +270,14 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                   <View style={{ flex: 1 }}>
                     <Text style={{
                       fontSize: 16,
-                      color: isSelected ? Colors.primary.teal : Colors.text.primary,
+                      color: isSelected ? theme.colors.primary.dark : theme.colors.text.primary,
                       fontWeight: isSelected ? '600' : '400',
                     }}>
                       {contract.contract_number}
                     </Text>
                     <Text style={{
                       fontSize: 14,
-                      color: Colors.text.secondary,
+                      color: theme.colors.text.secondary,
                       marginTop: 2,
                     }}>
                       {contract.status} • {contract.client}
@@ -315,14 +307,14 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                   <View style={{ flex: 1 }}>
                     <Text style={{
                       fontSize: 16,
-                      color: isSelected ? Colors.primary.teal : Colors.text.primary,
+                      color: isSelected ? theme.colors.primary.dark : theme.colors.text.primary,
                       fontWeight: isSelected ? '600' : '400',
                     }}>
                       {address.address_line_1}
                     </Text>
                     <Text style={{
                       fontSize: 14,
-                      color: Colors.text.secondary,
+                      color: theme.colors.text.secondary,
                       marginTop: 2,
                     }}>
                       {address.city}, {address.state} - {address.pincode}
@@ -331,24 +323,17 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                 )}
               />
 
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Drop Address (Optional)</Text>
-                <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
-                  <Ionicons 
-                    name="location-outline" 
-                    size={20} 
-                    color={Colors.text.tertiary}
-                    style={styles.textAreaIcon}
-                  />
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Drop Address (Optional)</Text>
+                <View style={[styles.formInput, styles.formInputMultiline]}>
                   <TextInput
-                    style={[styles.input, styles.textArea]}
                     placeholder="Enter drop address if different from pickup"
-                    placeholderTextColor={Colors.text.tertiary}
+                    placeholderTextColor={theme.colors.text.tertiary}
                     value={dropAddressText}
                     onChangeText={setDropAddressText}
                     multiline
                     numberOfLines={3}
+                    style={{ color: theme.colors.text.primary }}
                   />
                 </View>
               </View>
@@ -358,121 +343,131 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Package Information</Text>
               
-              <View style={styles.row}>
-                <View style={[styles.inputGroup, { flex: 1, marginRight: Spacing.sm }]}>
-                  <Text style={styles.inputLabel}>
-                    Boxes <Text style={styles.required}>*</Text>
+              <View style={{ flexDirection: 'row' }}>
+                <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
+                  <Text style={styles.formLabel}>
+                    Boxes <Text style={styles.requiredAsterisk}>*</Text>
                   </Text>
-                  <View style={styles.inputWrapper}>
-                    <MaterialIcons name="inventory-2" size={20} color={Colors.text.tertiary} />
+                  <View style={styles.counterContainer}>
+                    <TouchableOpacity 
+                      style={styles.counterButton}
+                      onPress={() => setNumberOfBoxes(String(Math.max(0, parseInt(numberOfBoxes) - 1)))}
+                    >
+                      <Feather name="minus" size={20} color={theme.colors.text.primary} />
+                    </TouchableOpacity>
                     <TextInput
-                      style={styles.input}
-                      placeholder="0"
-                      placeholderTextColor={Colors.text.tertiary}
+                      style={styles.counterInput}
                       value={numberOfBoxes}
                       onChangeText={setNumberOfBoxes}
                       keyboardType="numeric"
                     />
+                    <TouchableOpacity 
+                      style={styles.counterButton}
+                      onPress={() => setNumberOfBoxes(String(parseInt(numberOfBoxes) + 1))}
+                    >
+                      <Feather name="plus" size={20} color={theme.colors.text.primary} />
+                    </TouchableOpacity>
                   </View>
                 </View>
 
-                <View style={[styles.inputGroup, { flex: 1, marginLeft: Spacing.sm }]}>
-                  <Text style={styles.inputLabel}>
-                    Invoices <Text style={styles.required}>*</Text>
+                <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
+                  <Text style={styles.formLabel}>
+                    Invoices <Text style={styles.requiredAsterisk}>*</Text>
                   </Text>
-                  <View style={styles.inputWrapper}>
-                    <MaterialIcons name="receipt" size={20} color={Colors.text.tertiary} />
+                  <View style={styles.counterContainer}>
+                    <TouchableOpacity 
+                      style={styles.counterButton}
+                      onPress={() => setNumberOfInvoices(String(Math.max(0, parseInt(numberOfInvoices) - 1)))}
+                    >
+                      <Feather name="minus" size={20} color={theme.colors.text.primary} />
+                    </TouchableOpacity>
                     <TextInput
-                      style={styles.input}
-                      placeholder="0"
-                      placeholderTextColor={Colors.text.tertiary}
+                      style={styles.counterInput}
                       value={numberOfInvoices}
                       onChangeText={setNumberOfInvoices}
                       keyboardType="numeric"
                     />
+                    <TouchableOpacity 
+                      style={styles.counterButton}
+                      onPress={() => setNumberOfInvoices(String(parseInt(numberOfInvoices) + 1))}
+                    >
+                      <Feather name="plus" size={20} color={theme.colors.text.primary} />
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Package Description</Text>
-                <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
-                  <MaterialIcons 
-                    name="description" 
-                    size={20} 
-                    color={Colors.text.tertiary}
-                    style={styles.textAreaIcon}
-                  />
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Package Description</Text>
+                <View style={[styles.formInput, styles.formInputMultiline]}>
                   <TextInput
-                    style={[styles.input, styles.textArea]}
                     placeholder="Describe the package contents"
-                    placeholderTextColor={Colors.text.tertiary}
+                    placeholderTextColor={theme.colors.text.tertiary}
                     value={packageDescription}
                     onChangeText={setPackageDescription}
                     multiline
                     numberOfLines={3}
+                    style={{ color: theme.colors.text.primary }}
                   />
                 </View>
               </View>
 
-              <View style={styles.row}>
-                <View style={[styles.inputGroup, { flex: 1, marginRight: Spacing.sm }]}>
-                  <Text style={styles.inputLabel}>Weight (kg)</Text>
-                  <View style={styles.inputWrapper}>
-                    <MaterialIcons name="fitness-center" size={20} color={Colors.text.tertiary} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="0.0"
-                      placeholderTextColor={Colors.text.tertiary}
-                      value={totalWeight}
-                      onChangeText={setTotalWeight}
-                      keyboardType="decimal-pad"
-                    />
-                  </View>
+              <View style={{ flexDirection: 'row' }}>
+                <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
+                  <Text style={styles.formLabel}>Weight (kg)</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="0.0"
+                    placeholderTextColor={theme.colors.text.tertiary}
+                    value={totalWeight}
+                    onChangeText={setTotalWeight}
+                    keyboardType="decimal-pad"
+                  />
                 </View>
 
-                <View style={[styles.inputGroup, { flex: 1, marginLeft: Spacing.sm }]}>
-                  <Text style={styles.inputLabel}>Declared Value (₹)</Text>
-                  <View style={styles.inputWrapper}>
-                    <MaterialIcons name="currency-rupee" size={20} color={Colors.text.tertiary} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="0.00"
-                      placeholderTextColor={Colors.text.tertiary}
-                      value={declaredValue}
-                      onChangeText={setDeclaredValue}
-                      keyboardType="decimal-pad"
-                    />
-                  </View>
+                <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
+                  <Text style={styles.formLabel}>Declared Value (₹)</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="0.00"
+                    placeholderTextColor={theme.colors.text.tertiary}
+                    value={declaredValue}
+                    onChangeText={setDeclaredValue}
+                    keyboardType="decimal-pad"
+                  />
                 </View>
               </View>
 
-              <View style={styles.switchContainer}>
-                <View style={styles.switchRow}>
-                  <View style={styles.switchLabelContainer}>
-                    <MaterialIcons name="warning" size={20} color={Colors.text.secondary} />
-                    <Text style={styles.switchLabel}>Fragile Package</Text>
-                  </View>
-                  <Switch
-                    value={isFragile}
-                    onValueChange={setIsFragile}
-                    trackColor={{ false: Colors.ui.border, true: Colors.primary.green }}
-                    thumbColor={Colors.text.white}
-                  />
+              <View style={styles.toggleContainer}>
+                <View style={styles.toggleLabel}>
+                  <MaterialIcons name="warning" size={20} color={theme.colors.semantic.warning} />
+                  <Text style={styles.toggleLabel}>Fragile Package</Text>
                 </View>
+                <Switch
+                  value={isFragile}
+                  onValueChange={setIsFragile}
+                  trackColor={{ 
+                    false: theme.colors.neutral[300], 
+                    true: theme.colors.primary.light 
+                  }}
+                  thumbColor={isFragile ? theme.colors.primary.main : theme.colors.neutral[100]}
+                />
+              </View>
 
-                <View style={styles.switchRow}>
-                  <View style={styles.switchLabelContainer}>
-                    <MaterialIcons name="edit" size={20} color={Colors.text.secondary} />
-                    <Text style={styles.switchLabel}>Requires Signature</Text>
-                  </View>
-                  <Switch
-                    value={requiresSignature}
-                    onValueChange={setRequiresSignature}
-                    trackColor={{ false: Colors.ui.border, true: Colors.primary.green }}
-                    thumbColor={Colors.text.white}
-                  />
+              <View style={styles.toggleContainer}>
+                <View style={styles.toggleLabel}>
+                  <MaterialIcons name="edit" size={20} color={theme.colors.primary.main} />
+                  <Text style={styles.toggleLabel}>Requires Signature</Text>
                 </View>
+                <Switch
+                  value={requiresSignature}
+                  onValueChange={setRequiresSignature}
+                  trackColor={{ 
+                    false: theme.colors.neutral[300], 
+                    true: theme.colors.primary.light 
+                  }}
+                  thumbColor={requiresSignature ? theme.colors.primary.main : theme.colors.neutral[100]}
+                />
               </View>
             </View>
 
@@ -480,16 +475,16 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Pickup Schedule</Text>
               
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  Expected Pickup Date <Text style={styles.required}>*</Text>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>
+                  Expected Pickup Date <Text style={styles.requiredAsterisk}>*</Text>
                 </Text>
                 <TouchableOpacity 
-                  style={styles.inputWrapper}
+                  style={styles.datePickerButton}
                   onPress={() => setShowDatePicker(true)}
                 >
-                  <MaterialIcons name="calendar-today" size={20} color={Colors.text.tertiary} />
-                  <Text style={styles.dateText}>
+                  <MaterialIcons name="calendar-today" size={20} color={theme.colors.text.secondary} />
+                  <Text style={styles.datePickerText}>
                     {expectedPickupDate.toLocaleDateString('en-US', {
                       weekday: 'short',
                       year: 'numeric',
@@ -497,7 +492,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                       day: 'numeric',
                     })}
                   </Text>
-                  <Feather name="chevron-down" size={16} color={Colors.text.tertiary} />
+                  <Feather name="chevron-down" size={16} color={theme.colors.text.tertiary} />
                 </TouchableOpacity>
               </View>
 
@@ -511,23 +506,17 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                 />
               )}
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Special Instructions</Text>
-                <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
-                  <MaterialIcons 
-                    name="note-add" 
-                    size={20} 
-                    color={Colors.text.tertiary}
-                    style={styles.textAreaIcon}
-                  />
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Special Instructions</Text>
+                <View style={[styles.formInput, styles.formInputMultiline]}>
                   <TextInput
-                    style={[styles.input, styles.textArea]}
                     placeholder="Any special handling instructions"
-                    placeholderTextColor={Colors.text.tertiary}
+                    placeholderTextColor={theme.colors.text.tertiary}
                     value={specialInstructions}
                     onChangeText={setSpecialInstructions}
                     multiline
                     numberOfLines={3}
+                    style={{ color: theme.colors.text.primary }}
                   />
                 </View>
               </View>
@@ -537,62 +526,60 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Contact Information (Optional)</Text>
               
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Phone Number</Text>
-                <View style={styles.inputWrapper}>
-                  <Feather name="phone" size={20} color={Colors.text.tertiary} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter phone number"
-                    placeholderTextColor={Colors.text.tertiary}
-                    value={customerPhone}
-                    onChangeText={setCustomerPhone}
-                    keyboardType="phone-pad"
-                  />
-                </View>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Phone Number</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter phone number"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={customerPhone}
+                  onChangeText={setCustomerPhone}
+                  keyboardType="phone-pad"
+                />
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Email Address</Text>
-                <View style={styles.inputWrapper}>
-                  <Feather name="mail" size={20} color={Colors.text.tertiary} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter email address"
-                    placeholderTextColor={Colors.text.tertiary}
-                    value={customerEmail}
-                    onChangeText={setCustomerEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Email Address</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter email address"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={customerEmail}
+                  onChangeText={setCustomerEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
               </View>
             </View>
 
-            {/* Submit Button */}
-            <View style={styles.submitContainer}>
+            {/* Submit Buttons */}
+            <View style={styles.actionButtonsContainer}>
               <TouchableOpacity 
-                style={[styles.submitButton, isLoading && styles.submitButtonDisabled]} 
+                style={[styles.actionButton, styles.secondaryActionButton]}
+                onPress={() => navigation.goBack()}
+                disabled={isLoading}
+              >
+                <Text style={styles.secondaryActionButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[
+                  styles.actionButton, 
+                  styles.primaryActionButton, 
+                  isLoading && styles.disabledActionButton
+                ]} 
                 onPress={handleSubmit}
                 activeOpacity={0.8}
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <ActivityIndicator size="small" color={Colors.text.white} />
+                  <ActivityIndicator size="small" color={theme.colors.text.onPrimary} />
                 ) : (
                   <>
-                    <MaterialIcons name="check-circle" size={20} color={Colors.text.white} />
-                    <Text style={styles.submitButtonText}>Create Order</Text>
+                    <MaterialIcons name="check-circle" size={20} color={theme.colors.text.onPrimary} />
+                    <Text style={styles.primaryActionButtonText}> Create Order</Text>
                   </>
                 )}
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.cancelButton} 
-                onPress={() => navigation.goBack()}
-                disabled={isLoading}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -602,179 +589,4 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.secondary,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: Spacing.md,
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.secondary,
-  },
-  header: {
-    backgroundColor: Colors.primary.teal,
-    ...createElevation(2),
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-  },
-  backButton: {
-    padding: Spacing.xs,
-  },
-  menuButton: {
-    padding: Spacing.xs,
-  },
-  headerTitle: {
-    fontSize: Typography.fontSize.xl,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.white,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: Spacing.xxxl,
-  },
-  section: {
-    backgroundColor: Colors.background.primary,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    marginTop: Spacing.xs,
-  },
-  sectionTitle: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.primary,
-    marginBottom: Spacing.md,
-  },
-  inputGroup: {
-    marginBottom: Spacing.lg,
-  },
-  inputLabel: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.text.primary,
-    marginBottom: Spacing.xs,
-  },
-  required: {
-    color: Colors.text.error,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.background.inputBar,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    height: 48,
-    borderWidth: 1,
-    borderColor: Colors.ui.border,
-  },
-  pickerWrapper: {
-    backgroundColor: Colors.background.inputBar,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.ui.border,
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 48,
-  },
-  textAreaWrapper: {
-    height: 'auto',
-    minHeight: 80,
-    paddingVertical: Spacing.sm,
-    alignItems: 'flex-start',
-  },
-  textAreaIcon: {
-    marginTop: 2,
-  },
-  input: {
-    flex: 1,
-    marginLeft: Spacing.sm,
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.primary,
-  },
-  textArea: {
-    textAlignVertical: 'top',
-    height: '100%',
-    paddingTop: 0,
-  },
-  row: {
-    flexDirection: 'row',
-  },
-  dateText: {
-    flex: 1,
-    marginLeft: Spacing.sm,
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.primary,
-  },
-  switchContainer: {
-    marginTop: Spacing.sm,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.divider,
-  },
-  switchLabelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  switchLabel: {
-    marginLeft: Spacing.sm,
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.primary,
-  },
-  submitContainer: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.xl,
-  },
-  submitButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary.green,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    height: 48,
-    ...createElevation(2),
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    marginLeft: Spacing.sm,
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.white,
-  },
-  cancelButton: {
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    marginTop: Spacing.sm,
-  },
-  cancelButtonText: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.secondary,
-  },
-});
-
 export default CreateOrder;
-

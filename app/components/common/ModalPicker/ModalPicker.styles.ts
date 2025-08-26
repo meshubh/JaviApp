@@ -1,8 +1,6 @@
-// app/components/ModalPicker/ModalPicker.styles.ts
-import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, createElevation, Spacing, Typography } from '../../../theme';
+import { createStyles } from '../../../theme/createStyles';
 
-export const modalPickerStyles = StyleSheet.create({
+export const useModalPickerStyles = createStyles((theme) => ({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -10,64 +8,64 @@ export const modalPickerStyles = StyleSheet.create({
   },
   
   modalContent: {
-    backgroundColor: Colors.background.primary,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
+    backgroundColor: theme.colors.background.primary,
+    borderTopLeftRadius: theme.borderRadius.xl,
+    borderTopRightRadius: theme.borderRadius.xl,
     maxHeight: '70%',
-    ...createElevation(4),
+    ...theme.elevation[4],
   },
   
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: Spacing.lg,
+    padding: theme.spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.divider,
+    borderBottomColor: theme.colors.border.secondary,
   },
   
   modalTitle: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.primary,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semiBold,
+    color: theme.colors.text.primary,
   },
   
   closeButton: {
-    padding: Spacing.xs,
+    padding: theme.spacing.xs,
   },
   
   listContainer: {
-    paddingBottom: Spacing.xl,
+    paddingBottom: theme.spacing.xl,
   },
   
   modalItem: {
-    padding: Spacing.lg,
+    padding: theme.spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.divider,
+    borderBottomColor: theme.colors.border.secondary,
   },
   
   modalItemSelected: {
-    backgroundColor: Colors.ui.backgroundSelected,
+    backgroundColor: theme.colors.background.tertiary,
   },
   
   modalItemTitle: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.primary,
-    marginBottom: Spacing.xs,
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
   },
   
   modalItemSubtitle: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
   },
   
   emptyContainer: {
-    padding: Spacing.xxl,
+    padding: theme.spacing.xxl,
     alignItems: 'center',
   },
   
   emptyText: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.tertiary,
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.text.tertiary,
   },
-});
+}));

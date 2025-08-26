@@ -24,20 +24,23 @@ import CustomDrawer from './components/CustomDrawer/index';
 
 // Import types and theme
 import { Colors } from './theme/colors';
+import { ThemeProvider, useTheme } from './theme/themeContext';
 import { RootStackParamList } from './types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Drawer = createDrawerNavigator<RootStackParamList>();
 
 // Loading Screen Component
-const LoadingScreen: React.FC = () => (
+const LoadingScreen: React.FC = () => {
+  const { theme } = useTheme();
+  return (
   <LinearGradient
     colors={Colors.gradients.main}
     style={styles.loadingContainer}
   >
-    <ActivityIndicator size="large" color={Colors.primary.green} />
+    <ActivityIndicator size="large" color={theme.colors.primary.main} />
   </LinearGradient>
-);
+)};
 
 // Drawer Navigator Component
 const DrawerNavigator: React.FC = () => {
@@ -70,7 +73,7 @@ const AuthenticatedNavigator: React.FC = () => {
       <Stack.Screen
         name="Home"
         component={DrawerNavigator}
-        options={{ animation: 'fade' }}
+        options={{ animation: 'fade', headerShown: false }}
       />
       <Stack.Screen
         name="OrderDetails"
@@ -115,14 +118,16 @@ const Navigation: React.FC = () => {
 // Main App Component
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <AuthProvider>
-          <StatusBar style="dark" backgroundColor={Colors.gradients.main[0]} />
-          <Navigation />
-        </AuthProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ThemeProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <AuthProvider>
+            <StatusBar style="dark" backgroundColor={Colors.gradients.main[0]} />
+            <Navigation />
+          </AuthProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ThemeProvider>
   );
 }
 

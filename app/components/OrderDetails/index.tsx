@@ -3,22 +3,23 @@ import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Linking,
-    Platform,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Linking,
+  Platform,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { OrderDetail, orderService } from '../../services/OrderService';
-import { BorderRadius, Colors, createElevation, Spacing, Typography } from '../../theme';
+import { Colors, Spacing } from '../../theme';
+import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
+import { useOrderDetailsStyles } from './orderDetails.styles';
 
 interface OrderDetailsScreenProps {
   navigation: DrawerNavigationProp<RootStackParamList, 'OrderDetails'>;
@@ -34,6 +35,9 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const { theme } = useTheme();
+  const styles = useOrderDetailsStyles(theme);
 
   useEffect(() => {
     loadOrderDetails();
@@ -150,7 +154,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
         <Text style={styles.sectionTitle}>Latest Tracking</Text>
         <View style={styles.trackingCard}>
           <View style={styles.trackingHeader}>
-            <MaterialIcons name="location-on" size={20} color={Colors.primary.green} />
+            <MaterialIcons name="location-on" size={20} color={theme.colors.primary.main} />
             <Text style={styles.trackingActivity}>{order.latest_tracking.activity}</Text>
           </View>
           <Text style={styles.trackingTime}>
@@ -172,7 +176,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
               }}
             >
               <Text style={styles.mapButtonText}>View on Map</Text>
-              <Feather name="external-link" size={14} color={Colors.primary.green} />
+              <Feather name="external-link" size={14} color={theme.colors.primary.main} />
             </TouchableOpacity>
           )}
         </View>
@@ -184,7 +188,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary.teal} />
+          <ActivityIndicator size="large" color={theme.colors.secondary.main} />
           <Text style={styles.loadingText}>Loading order details...</Text>
         </View>
       </SafeAreaView>
@@ -195,7 +199,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <MaterialIcons name="error-outline" size={48} color={Colors.text.error} />
+          <MaterialIcons name="error-outline" size={48} color={theme.colors.semantic.error} />
           <Text style={styles.errorText}>Order not found</Text>
           <TouchableOpacity
             style={styles.backButton}
@@ -212,17 +216,17 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
 
   return (
     <>
-      <StatusBar backgroundColor={Colors.primary.teal} barStyle="light-content" />
+      <StatusBar backgroundColor={theme.colors.secondary.main} barStyle="light-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackButton}>
-              <Feather name="arrow-left" size={24} color={Colors.text.white} />
+              <Feather name="arrow-left" size={24} color={theme.colors.text.inverse} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Order #{order.order_number}</Text>
             <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-              <Feather name="menu" size={24} color={Colors.text.white} />
+              <Feather name="menu" size={24} color={theme.colors.text.inverse} />
             </TouchableOpacity>
           </View>
         </View>
@@ -234,8 +238,8 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              colors={[Colors.primary.teal]}
-              tintColor={Colors.primary.teal}
+              colors={[theme.colors.secondary.main]}
+              tintColor={theme.colors.secondary.main}
             />
           }
         >
@@ -315,7 +319,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
             <Text style={styles.sectionTitle}>Pickup Address</Text>
             <View style={styles.addressCard}>
               <View style={styles.addressHeader}>
-                <Feather name="map-pin" size={16} color={Colors.primary.green} />
+                <Feather name="map-pin" size={16} color={theme.colors.primary.main} />
                 <Text style={styles.addressTitle}>Pickup Location</Text>
               </View>
               <Text style={styles.addressText}>
@@ -325,7 +329,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
               </Text>
               {order.pickup_address.contact_person_name && (
                 <View style={styles.contactInfo}>
-                  <Feather name="user" size={14} color={Colors.text.secondary} />
+                  <Feather name="user" size={14} color={theme.colors.text. secondary} />
                   <Text style={styles.contactText}>
                     {order.pickup_address.contact_person_name}
                   </Text>
@@ -336,7 +340,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
                   style={styles.contactInfo}
                   onPress={() => callPhone(order.pickup_address.contact_person_phone!)}
                 >
-                  <Feather name="phone" size={14} color={Colors.primary.green} />
+                  <Feather name="phone" size={14} color={theme.colors.primary.main} />
                   <Text style={[styles.contactText, styles.contactLink]}>
                     {order.pickup_address.contact_person_phone}
                   </Text>
@@ -348,7 +352,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
                   onPress={() => openMaps(order.pickup_maps_url, 
                     `${order.pickup_address.address_line_1}, ${order.pickup_address.city}`)}
                 >
-                  <MaterialIcons name="directions" size={16} color={Colors.primary.green} />
+                  <MaterialIcons name="directions" size={16} color={theme.colors.primary.main} />
                   <Text style={styles.mapLinkText}>Get Directions</Text>
                 </TouchableOpacity>
               )}
@@ -357,7 +361,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
             <Text style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>Drop Address</Text>
             <View style={styles.addressCard}>
               <View style={styles.addressHeader}>
-                <Feather name="map-pin" size={16} color={Colors.text.error} />
+                <Feather name="map-pin" size={16} color={theme.colors.semantic.error} />
                 <Text style={styles.addressTitle}>Drop Location</Text>
               </View>
               <Text style={styles.addressText}>
@@ -367,7 +371,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
               </Text>
               {order.drop_address.contact_person_name && (
                 <View style={styles.contactInfo}>
-                  <Feather name="user" size={14} color={Colors.text.secondary} />
+                  <Feather name="user" size={14} color={theme.colors.text. secondary} />
                   <Text style={styles.contactText}>
                     {order.drop_address.contact_person_name}
                   </Text>
@@ -378,7 +382,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
                   style={styles.contactInfo}
                   onPress={() => callPhone(order.drop_address.contact_person_phone!)}
                 >
-                  <Feather name="phone" size={14} color={Colors.primary.green} />
+                  <Feather name="phone" size={14} color={theme.colors.primary.main} />
                   <Text style={[styles.contactText, styles.contactLink]}>
                     {order.drop_address.contact_person_phone}
                   </Text>
@@ -390,7 +394,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
                   onPress={() => openMaps(order.drop_maps_url,
                     order.drop_address_text || `${order.drop_address.address_line_1}, ${order.drop_address.city}`)}
                 >
-                  <MaterialIcons name="directions" size={16} color={Colors.primary.green} />
+                  <MaterialIcons name="directions" size={16} color={theme.colors.primary.main} />
                   <Text style={styles.mapLinkText}>Get Directions</Text>
                 </TouchableOpacity>
               )}
@@ -403,7 +407,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
             {order.expected_pickup_date && (
               <View style={styles.scheduleItem}>
                 <View style={styles.scheduleIcon}>
-                  <MaterialIcons name="schedule" size={20} color={Colors.primary.green} />
+                  <MaterialIcons name="schedule" size={20} color={theme.colors.primary.main} />
                 </View>
                 <View style={styles.scheduleContent}>
                   <Text style={styles.scheduleLabel}>Expected Pickup</Text>
@@ -429,7 +433,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
             {order.pickup_completed_at && (
               <View style={styles.scheduleItem}>
                 <View style={styles.scheduleIcon}>
-                  <MaterialIcons name="check-circle" size={20} color={Colors.primary.green} />
+                  <MaterialIcons name="check-circle" size={20} color={theme.colors.primary.main} />
                 </View>
                 <View style={styles.scheduleContent}>
                   <Text style={styles.scheduleLabel}>Actual Pickup</Text>
@@ -442,7 +446,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
             {order.delivery_completed_at && (
               <View style={styles.scheduleItem}>
                 <View style={styles.scheduleIcon}>
-                  <MaterialIcons name="done-all" size={20} color={Colors.primary.green} />
+                  <MaterialIcons name="done-all" size={20} color={theme.colors.primary.main} />
                 </View>
                 <View style={styles.scheduleContent}>
                   <Text style={styles.scheduleLabel}>Delivered</Text>
@@ -492,7 +496,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
                   style={styles.contactRow}
                   onPress={() => callPhone(order.customer_phone!)}
                 >
-                  <Feather name="phone" size={16} color={Colors.primary.green} />
+                  <Feather name="phone" size={16} color={theme.colors.primary.main} />
                   <Text style={styles.contactLink}>{order.customer_phone}</Text>
                 </TouchableOpacity>
               )}
@@ -501,7 +505,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
                   style={styles.contactRow}
                   onPress={() => sendEmail(order.customer_email!)}
                 >
-                  <Feather name="mail" size={16} color={Colors.primary.green} />
+                  <Feather name="mail" size={16} color={theme.colors.primary.main} />
                   <Text style={styles.contactLink}>{order.customer_email}</Text>
                 </TouchableOpacity>
               )}
@@ -521,7 +525,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
                 style={styles.cancelOrderButton}
                 onPress={handleCancelOrder}
               >
-                <MaterialIcons name="cancel" size={20} color={Colors.text.white} />
+                <MaterialIcons name="cancel" size={20} color={theme.colors.text.inverse} />
                 <Text style={styles.cancelOrderButtonText}>Cancel Order</Text>
               </TouchableOpacity>
             </View>
@@ -533,347 +537,5 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.secondary,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: Spacing.md,
-    fontSize: Typography.fontSize.md,
-    color: Colors.text.secondary,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-  },
-  errorText: {
-    fontSize: Typography.fontSize.lg,
-    color: Colors.text.primary,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xl,
-  },
-  backButton: {
-    backgroundColor: Colors.primary.teal,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-  },
-  backButtonText: {
-    color: Colors.text.white,
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  header: {
-    backgroundColor: Colors.primary.teal,
-    ...createElevation(2),
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-  },
-  headerBackButton: {
-    padding: Spacing.xs,
-  },
-  menuButton: {
-    padding: Spacing.xs,
-  },
-  headerTitle: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.white,
-  },
-  content: {
-    flex: 1,
-  },
-  statusCard: {
-    backgroundColor: Colors.background.primary,
-    padding: Spacing.xl,
-    marginVertical: Spacing.xs,
-    alignItems: 'center',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    marginBottom: Spacing.sm,
-  },
-  statusText: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semiBold,
-    marginLeft: Spacing.sm,
-  },
-  statusDate: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
-  },
-  overdueAlert: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-    backgroundColor: Colors.text.warning + '20',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
-  },
-  overdueText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.warning,
-    marginLeft: Spacing.xs,
-  },
-  section: {
-    backgroundColor: Colors.background.primary,
-    padding: Spacing.xl,
-    marginTop: Spacing.xs,
-  },
-  sectionTitle: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.primary,
-    marginBottom: Spacing.md,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.divider,
-  },
-  infoLabel: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
-  },
-  infoValue: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.primary,
-    fontWeight: Typography.fontWeight.medium,
-    flex: 1,
-    textAlign: 'right',
-  },
-  amountText: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.primary.green,
-  },
-  tagContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: Spacing.md,
-  },
-  tag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.ui.border,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
-    marginRight: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  priorityTag: {
-    backgroundColor: Colors.primary.blue + '20',
-  },
-  tagText: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.text.primary,
-    marginLeft: Spacing.xs,
-  },
-  addressCard: {
-    backgroundColor: Colors.background.inputBar,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.ui.border,
-  },
-  addressHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  addressTitle: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.text.primary,
-    marginLeft: Spacing.xs,
-  },
-  addressText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.primary,
-    lineHeight: 20,
-  },
-  contactInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-  },
-  contactText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
-    marginLeft: Spacing.xs,
-  },
-  contactLink: {
-    color: Colors.primary.green,
-    textDecorationLine: 'underline',
-  },
-  contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-  },
-  mapLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.ui.divider,
-  },
-  mapLinkText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.primary.green,
-    marginLeft: Spacing.xs,
-  },
-  scheduleItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-  },
-  scheduleIcon: {
-    width: 40,
-    alignItems: 'center',
-  },
-  scheduleContent: {
-    flex: 1,
-  },
-  scheduleLabel: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
-  },
-  scheduleDate: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.primary,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  instructionsText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.primary,
-    lineHeight: 20,
-  },
-  timelineItem: {
-    flexDirection: 'row',
-    marginBottom: Spacing.lg,
-  },
-  timelineIndicator: {
-    width: 30,
-    alignItems: 'center',
-  },
-  timelineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: Colors.ui.border,
-  },
-  timelineDotActive: {
-    backgroundColor: Colors.primary.green,
-  },
-  timelineLine: {
-    width: 2,
-    flex: 1,
-    backgroundColor: Colors.ui.border,
-    marginTop: Spacing.xs,
-  },
-  timelineContent: {
-    flex: 1,
-    marginLeft: Spacing.sm,
-  },
-  timelineStatus: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.text.primary,
-  },
-  timelineDate: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.text.secondary,
-    marginTop: 2,
-  },
-  timelineReason: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.text.tertiary,
-    marginTop: Spacing.xs,
-  },
-  trackingCard: {
-    backgroundColor: Colors.background.inputBar,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.ui.border,
-  },
-  trackingHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  trackingActivity: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.text.primary,
-    marginLeft: Spacing.sm,
-  },
-  trackingTime: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
-    marginTop: Spacing.sm,
-  },
-  trackingLocation: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.tertiary,
-    marginTop: Spacing.xs,
-  },
-  mapButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.ui.divider,
-  },
-  mapButtonText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.primary.green,
-    marginRight: Spacing.xs,
-  },
-  actionSection: {
-    padding: Spacing.xl,
-  },
-  cancelOrderButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.text.error,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    height: 48,
-    ...createElevation(2),
-  },
-  cancelOrderButtonText: {
-    marginLeft: Spacing.sm,
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semiBold,
-    color: Colors.text.white,
-  },
-});
 
 export default OrderDetailsScreen;
