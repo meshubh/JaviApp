@@ -28,7 +28,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // const THEME_STORAGE_KEY = '@app_theme';
 
-const SELECTED_THEME = 'premium'; // Change this value to switch themes
+const SELECTED_THEME = 'jeebly'; // Change this value to switch themes
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // const [themeName, setThemeName] = useState<ThemeName>('dhl');

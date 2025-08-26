@@ -1,8 +1,10 @@
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -11,8 +13,10 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
+import { DashboardStats, orderService } from '../../services/OrderService';
 import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
+import NotificationDropdown from '../NotificationDropdown/index';
 import { useHomeStyles } from './home.styles';
 
 interface HomeScreenProps {
@@ -33,15 +37,70 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const styles = useHomeStyles(theme);
   
+  // State
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notificationDropdownVisible, setNotificationDropdownVisible] = useState(false);
+  
+  // Animation values
   const cardAnimations = useRef([
     new Animated.Value(0),
     new Animated.Value(0),
     new Animated.Value(0),
   ]).current;
 
+  const statsAnimations = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
+
+  const notificationBadgeScale = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
+    fetchDashboardStats();
     animateCards();
+    animateNotificationBadge();
   }, []);
+
+  const animateNotificationBadge = () => {
+    // Pulse animation for notification badge
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(notificationBadgeScale, {
+          toValue: 1.2,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(notificationBadgeScale, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
+
+  const fetchDashboardStats = async () => {
+    try {
+      setError(null);
+      const stats = await orderService.getDashboardStats();
+      setDashboardStats(stats);
+      animateStats();
+    } catch (err) {
+      console.error('Failed to fetch dashboard stats:', err);
+      setError('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchDashboardStats();
+  };
 
   const animateCards = (): void => {
     const animations = cardAnimations.map((anim, index) => {
@@ -56,6 +115,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       ]);
     });
     Animated.parallel(animations).start();
+  };
+
+  const animateStats = (): void => {
+    const animations = statsAnimations.map((anim, index) => {
+      return Animated.sequence([
+        Animated.delay(index * 150),
+        Animated.spring(anim, {
+          toValue: 1,
+          friction: 8,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+      ]);
+    });
+    Animated.parallel(animations).start();
+  };
+
+  const handleNotificationItemPress = (orderId: string) => {
+    navigation.navigate('OrderDetails', { orderId });
+  };
+
+  const handleViewAllOrders = () => {
+    navigation.navigate('ViewOrders');
   };
 
   const actionCards: ActionCard[] = [
@@ -93,9 +175,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     });
   };
 
+  const getTrendIcon = (trend: number) => {
+    if (trend > 0) return 'trending-up';
+    if (trend < 0) return 'trending-down';
+    return 'minus';
+  };
+
+  const getTrendColor = (trend: number) => {
+    if (trend > 0) return theme.colors.semantic.success;
+    if (trend < 0) return theme.colors.semantic.error;
+    return theme.colors.text.tertiary;
+  };
+
+  const formatTrend = (trend: number) => {
+    if (trend > 0) return `+${trend.toFixed(1)}%`;
+    if (trend < 0) return `${trend.toFixed(1)}%`;
+    return '0%';
+  };
+
+  const hasNotifications = dashboardStats && dashboardStats.recent_activity.length > 0;
+
   return (
     <>
-      <StatusBar backgroundColor={theme.colors.primary.main} barStyle="dark-content" />
+      <StatusBar backgroundColor={theme.colors.primary.main} barStyle="light-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -109,15 +211,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             
             <Text style={styles.headerTitle}>Javi Logistics</Text>
             
-            <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.headerActionButton}>
-                <Feather name="search" size={22} color={theme.colors.text.onPrimary} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.headerActionButton}>
-                <Ionicons name="notifications-outline" size={22} color={theme.colors.text.onPrimary} />
-                <View style={styles.notificationDot} />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity 
+              style={styles.notificationButton}
+              onPress={() => setNotificationDropdownVisible(true)}
+            >
+              <Ionicons name="notifications-outline" size={22} color={theme.colors.text.onPrimary} />
+              {hasNotifications && (
+                <Animated.View 
+                  style={[
+                    styles.notificationBadge,
+                    { transform: [{ scale: notificationBadgeScale }] }
+                  ]} 
+                />
+              )}
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -125,6 +232,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           style={styles.content}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[theme.colors.primary.main]}
+            />
+          }
         >
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
@@ -178,51 +292,107 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           {/* Stats Section */}
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Overview</Text>
-            <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
-                <Text style={styles.statNumber}>12</Text>
-                <Text style={styles.statLabel}>Total Orders</Text>
-                <View style={styles.statTrend}>
-                  <Feather name="trending-up" size={14} color={theme.colors.semantic.success} />
-                  <Text style={styles.statTrendText}>+15%</Text>
-                </View>
+            
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={theme.colors.primary.main} />
               </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statNumber}>3</Text>
-                <Text style={styles.statLabel}>Pending</Text>
-                <View style={styles.statTrend}>
-                  <Feather name="clock" size={14} color={theme.colors.semantic.warning} />
-                  <Text style={[styles.statTrendText, { color: theme.colors.semantic.warning }]}>
-                    Active
-                  </Text>
-                </View>
+            ) : error ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity onPress={fetchDashboardStats} style={styles.retryButton}>
+                  <Text style={styles.retryText}>Retry</Text>
+                </TouchableOpacity>
               </View>
-            </View>
+            ) : dashboardStats ? (
+              <View style={styles.statsGrid}>
+                <Animated.View
+                  style={[
+                    styles.statCard,
+                    {
+                      opacity: statsAnimations[0],
+                      transform: [
+                        {
+                          scale: statsAnimations[0],
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <Text style={styles.statNumber}>{dashboardStats.total_orders}</Text>
+                  <Text style={styles.statLabel}>Total Orders</Text>
+                  <View style={styles.statTrend}>
+                    <Feather 
+                      name={getTrendIcon(dashboardStats.orders_trend)} 
+                      size={14} 
+                      color={getTrendColor(dashboardStats.orders_trend)} 
+                    />
+                    <Text style={[styles.statTrendText, { color: getTrendColor(dashboardStats.orders_trend) }]}>
+                      {formatTrend(dashboardStats.orders_trend)}
+                    </Text>
+                  </View>
+                </Animated.View>
+                
+                <Animated.View
+                  style={[
+                    styles.statCard,
+                    {
+                      opacity: statsAnimations[1],
+                      transform: [
+                        {
+                          scale: statsAnimations[1],
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <Text style={styles.statNumber}>{dashboardStats.pending_orders}</Text>
+                  <Text style={styles.statLabel}>Pending</Text>
+                  <View style={styles.statTrend}>
+                    <Feather name="clock" size={14} color={theme.colors.semantic.warning} />
+                    <Text style={[styles.statTrendText, { color: theme.colors.semantic.warning }]}>
+                      Active
+                    </Text>
+                  </View>
+                </Animated.View>
+              </View>
+            ) : null}
           </View>
 
-          {/* Recent Activity */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Feather name="package" size={16} color={theme.colors.semantic.success} />
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityText}>Order #1234 delivered</Text>
-                <Text style={styles.activityTime}>2 hours ago</Text>
+          {/* Quick Stats Row */}
+          {dashboardStats && (
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Today's Summary</Text>
+              <View style={styles.quickStatsRow}>
+                <View style={styles.quickStatItem}>
+                  <Text style={styles.quickStatValue}>{dashboardStats.today_orders}</Text>
+                  <Text style={styles.quickStatLabel}>New Orders</Text>
+                </View>
+                <View style={styles.quickStatItem}>
+                  <Text style={styles.quickStatValue}>{dashboardStats.in_transit_orders}</Text>
+                  <Text style={styles.quickStatLabel}>In Transit</Text>
+                </View>
+                <View style={styles.quickStatItem}>
+                  <Text style={styles.quickStatValue}>
+                    {dashboardStats.insights.on_time_delivery_rate 
+                      ? `${dashboardStats.insights.on_time_delivery_rate}%` 
+                      : 'N/A'}
+                  </Text>
+                  <Text style={styles.quickStatLabel}>On Time</Text>
+                </View>
               </View>
             </View>
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Feather name="truck" size={16} color={theme.colors.semantic.warning} />
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityText}>Order #1235 shipped</Text>
-                <Text style={styles.activityTime}>5 hours ago</Text>
-              </View>
-            </View>
-          </View>
+          )}
         </ScrollView>
+
+        {/* Notification Dropdown Component */}
+        <NotificationDropdown
+          visible={notificationDropdownVisible}
+          activities={dashboardStats?.recent_activity || []}
+          onClose={() => setNotificationDropdownVisible(false)}
+          onItemPress={handleNotificationItemPress}
+          onViewAllPress={handleViewAllOrders}
+        />
       </SafeAreaView>
     </>
   );

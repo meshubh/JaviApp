@@ -115,6 +115,57 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
+export interface DashboardStats {
+  // Main stats
+  total_orders: number;
+  pending_orders: number;
+  in_transit_orders: number;
+  delivered_orders: number;
+  cancelled_orders: number;
+  
+  // Trends
+  orders_trend: number;
+  pending_trend: number;
+  
+  // Time-based
+  today_orders: number;
+  this_week_orders: number;
+  this_month_orders: number;
+  
+  // Financial
+  total_revenue: number;
+  pending_revenue: number;
+  
+  // Packages
+  total_boxes: number;
+  total_bundles: number;
+  
+  // Recent activity
+  recent_activity: Array<{
+    order_id: string;
+    order_number: string;
+    status: string;
+    icon: string;
+    icon_color: string;
+    description: string;
+    time_ago: string;
+    created_at: string;
+  }>;
+  
+  // Chart data
+  monthly_trend: Array<{
+    month: string;
+    orders: number;
+  }>;
+  
+  // Insights
+  insights: {
+    most_common_status: string;
+    average_delivery_time: number | null;
+    on_time_delivery_rate: number | null;
+  };
+}
+
 class OrderService {
   // Client endpoints
   async getClientOrders(params?: {
@@ -211,6 +262,43 @@ class OrderService {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  async getDashboardStats(): Promise<DashboardStats> {
+    return apiClient.get<DashboardStats>('/api/v1/orders/client_dashboard_stats');
+  }
+
+  // Helper method to format currency
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }
+
+  // Helper to get trend indicator
+  getTrendIndicator(trend: number): { icon: string; color: string; text: string } {
+    if (trend > 0) {
+      return {
+        icon: 'trending-up',
+        color: '#10B981',
+        text: `+${trend.toFixed(1)}%`
+      };
+    } else if (trend < 0) {
+      return {
+        icon: 'trending-down',
+        color: '#EF4444',
+        text: `${trend.toFixed(1)}%`
+      };
+    } else {
+      return {
+        icon: 'minus',
+        color: '#6B7280',
+        text: '0%'
+      };
+    }
   }
 }
 
