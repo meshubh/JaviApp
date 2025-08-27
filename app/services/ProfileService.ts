@@ -59,7 +59,6 @@ export interface BankAccount {
   account_number?: string;
   account_number_masked?: string;
   is_primary: boolean;
-  is_verified: boolean;
   is_active: boolean;
   created_at?: string;
 }
@@ -362,7 +361,6 @@ class ProfileService {
     id: string;
     bank_name: string;
     account_number_masked: string;
-    is_verified: boolean;
     status: string;
     message: string;
   }> {
