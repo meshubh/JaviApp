@@ -30,6 +30,13 @@ export const LogistiqTheme: ThemeStructure = {
       elevated: '#FFFFFF',
       overlay: 'rgba(0, 0, 0, 0.5)',
     },
+    surface: {
+      primary: '#FFFFFF',
+      secondary: '#F9FAFB',
+      elevated: '#FFFFFF',
+      pressed: '#F3F4F6',
+      disabled: '#E5E7EB',
+    },
     text: {
       primary: '#111827',
       secondary: '#6B7280',

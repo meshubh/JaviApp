@@ -13,7 +13,7 @@ class ApiClient {
   private refreshPromise: Promise<string> | null = null;
 
   constructor() {
-    this.baseURL = API_BASE_URL || 'https://your-ec2-instance.amazonaws.com';
+    this.baseURL = API_BASE_URL || 'https://javilogistics.com';
   }
 
   private async getAuthHeader(): Promise<HeadersInit> {

@@ -86,6 +86,7 @@ export interface CreateOrderData {
   pickup_address_id: string;
   drop_address_id?: string;
   drop_address_text?: string;
+  drop_address_place_id?: string;
   number_of_boxes: number;
   number_of_invoices: number; // Will be stored as bundles
   expected_pickup_date: string;

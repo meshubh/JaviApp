@@ -12,7 +12,7 @@ export const API_URLS = {
   physicalDevice: `http://${LOCAL_IP}:8000`,
   
   // For production (your actual AWS EC2 instance)
-  production: 'https://your-ec2-instance.amazonaws.com',
+  production: 'https://javilogistics.com', 
   
   // For iOS Simulator
   iosSimulator: 'http://localhost:8000',

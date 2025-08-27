@@ -29,6 +29,13 @@ export interface ThemeStructure {
       elevated: string;
       overlay: string;
     };
+    surface: {
+      primary: string;
+      secondary: string;
+      elevated: string;
+      pressed: string;
+      disabled: string;
+    };
     text: {
       primary: string;
       secondary: string;

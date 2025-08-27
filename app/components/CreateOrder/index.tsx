@@ -22,8 +22,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Address, Contract, CreateOrderData, orderService } from '../../services/OrderService';
 import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
+import GoogleAddressSearchable from '../GoogleAddressSearchable/index';
 import SearchableDropdown from '../common/SearchableDropdown';
 import { useCreateOrderStyles } from './createOrder.styles';
+
+// Add your Google Places API key here
+const GOOGLE_PLACES_API_KEY = 'AIzaSyDRlCuBdFQ8bdlhdYTAkLhXe0BakGC1SBQ';
 
 interface CreateOrderProps {
   navigation: DrawerNavigationProp<RootStackParamList, 'CreateOrder'>;
@@ -41,6 +45,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   const [selectedPickupAddress, setSelectedPickupAddress] = useState<string>('');
   const [selectedDropAddress, setSelectedDropAddress] = useState<string>('');
   const [dropAddressText, setDropAddressText] = useState('');
+  const [dropAddressPlaceId, setDropAddressPlaceId] = useState<string>(''); // New field for Google Place ID
   const [numberOfBoxes, setNumberOfBoxes] = useState('0');
   const [numberOfInvoices, setNumberOfInvoices] = useState('0');
   const [packageDescription, setPackageDescription] = useState('');
@@ -108,6 +113,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     setSelectedPickupAddress('');
     setSelectedDropAddress('');
     setDropAddressText('');
+    setDropAddressPlaceId('');
     setNumberOfBoxes('0');
     setNumberOfInvoices('0');
     setPackageDescription('');
@@ -120,6 +126,11 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     setCustomerEmail('');
     setExpectedPickupDate(new Date());
   };
+
+  const handleDropAddressSelect = useCallback((address: string, placeId?: string) => {
+    setDropAddressText(address);
+    setDropAddressPlaceId(placeId || '');
+  }, []);
 
   const validateForm = (): boolean => {
     if (!selectedContract) {
@@ -159,6 +170,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
         pickup_address_id: selectedPickupAddress,
         drop_address_id: selectedDropAddress || undefined,
         drop_address_text: dropAddressText || undefined,
+        drop_address_place_id: dropAddressPlaceId || undefined, // Include Google Place ID if available
         number_of_boxes: parseInt(numberOfBoxes) || 0,
         number_of_invoices: parseInt(numberOfInvoices) || 0,
         expected_pickup_date: expectedPickupDate.toISOString(),
@@ -323,20 +335,14 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                 )}
               />
 
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Drop Address (Optional)</Text>
-                <View style={[styles.formInput, styles.formInputMultiline]}>
-                  <TextInput
-                    placeholder="Enter drop address if different from pickup"
-                    placeholderTextColor={theme.colors.text.tertiary}
-                    value={dropAddressText}
-                    onChangeText={setDropAddressText}
-                    multiline
-                    numberOfLines={3}
-                    style={{ color: theme.colors.text.primary }}
-                  />
-                </View>
-              </View>
+              {/* Google Address Searchable Drop Address */}
+              <GoogleAddressSearchable
+                label="Drop Address"
+                value={dropAddressText}
+                onSelect={handleDropAddressSelect}
+                placeholder="Search for drop address using Google"
+                googleApiKey={GOOGLE_PLACES_API_KEY}
+              />
             </View>
 
             {/* Package Details */}

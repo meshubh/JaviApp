@@ -43,6 +43,13 @@ export const PremiumTheme: ThemeStructure = {
       elevated: '#FFFFFF',
       overlay: 'rgba(0, 0, 0, 0.6)',
     },
+    surface: {
+      primary: '#FFFFFF',
+      secondary: '#FAFAFA',
+      elevated: '#FFFFFF',
+      pressed: '#F4F4F5',
+      disabled: '#E4E4E7',
+    },
     text: {
       primary: '#18181B',
       secondary: '#52525B',

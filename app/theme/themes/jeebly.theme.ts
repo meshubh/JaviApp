@@ -30,6 +30,13 @@ export const JeeblyTheme: ThemeStructure = {
       elevated: '#FFFFFF',
       overlay: 'rgba(0, 0, 0, 0.4)',
     },
+    surface: {
+      primary: '#FFFFFF',
+      secondary: '#F8FAF9',
+      elevated: '#FFFFFF',
+      pressed: '#F0F7F6',
+      disabled: '#E0F2F1',
+    },
     text: {
       primary: '#263238',
       secondary: '#546E7A',

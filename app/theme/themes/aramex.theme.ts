@@ -1,5 +1,5 @@
-import { sharedStyles, neutralColors } from "./base.theme";
 import type { ThemeStructure } from "./base.theme";
+import { neutralColors, sharedStyles } from "./base.theme";
 
 export const AramexTheme: ThemeStructure = {
   name: 'Aramex',
@@ -29,6 +29,13 @@ export const AramexTheme: ThemeStructure = {
       tertiary: '#FFEBEE',    // Light red tint
       elevated: '#FFFFFF',
       overlay: 'rgba(0, 0, 0, 0.5)',
+    },
+    surface: {
+      primary: '#FFFFFF',
+      secondary: '#F5F5F5',
+      elevated: '#FFFFFF',
+      pressed: '#F0F0F0',
+      disabled: '#E0E0E0',
     },
     text: {
       primary: '#212121',

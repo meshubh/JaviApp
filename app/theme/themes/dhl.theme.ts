@@ -30,6 +30,13 @@ export const DHLTheme: ThemeStructure = {
       elevated: '#FFFFFF',
       overlay: 'rgba(0, 0, 0, 0.5)',
     },
+    surface: {
+      primary: '#FFFFFF',
+      secondary: '#F5F5F5',
+      elevated: '#FFFFFF',
+      pressed: '#F0F0F0',
+      disabled: '#E0E0E0',
+    },
     text: {
       primary: '#212121',
       secondary: '#757575',
