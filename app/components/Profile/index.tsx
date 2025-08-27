@@ -1,9 +1,11 @@
-// app/Profile/index.tsx
+// app/screens/Profile/index.tsx
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
+  Modal,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -13,12 +15,15 @@ import {
   View
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { Colors } from '../../theme';
+import { orderService } from '../../services/OrderService';
 import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
+import Addresses from '../Addresses/index';
+import BankAccounts from '../BankAccounts/index';
+import PersonalInformation from '../PersonalInformation/index';
 import { useProfileStyles } from './profile.styles';
 
-interface ProfileScreenProps {
+interface ProfileProps {
   navigation: DrawerNavigationProp<RootStackParamList, 'Profile'>;
 }
 
@@ -28,18 +33,53 @@ interface ProfileOption {
   title: string;
   subtitle?: string;
   value?: string;
-  action?: 'navigate' | 'toggle' | 'logout';
+  action?: 'navigate' | 'toggle' | 'logout' | 'modal';
   hasToggle?: boolean;
   isDanger?: boolean;
+  modalComponent?: 'personal' | 'addresses' | 'bankAccounts';
 }
 
-const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
+interface OrderStats {
+  total_orders: number;
+  active_orders: number;
+  delivered_orders: number;
+}
+
+const Profile: React.FC<ProfileProps> = ({ navigation }) => {
   const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [orderStats, setOrderStats] = useState<OrderStats>({
+    total_orders: 0,
+    active_orders: 0,
+    delivered_orders: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState<'personal' | 'addresses' | 'bankAccounts' | null>(null);
 
   const { theme } = useTheme();
   const styles = useProfileStyles(theme);
+
+  useEffect(() => {
+    fetchOrderStats();
+  }, []);
+
+  const fetchOrderStats = async () => {
+    try {
+      setLoadingStats(true);
+      const stats = await orderService.getOrderStats();
+      setOrderStats({
+        total_orders: stats.total_orders,
+        active_orders: stats.active_orders,
+        delivered_orders: stats.delivered_orders,
+      });
+    } catch (error) {
+      console.error('Failed to fetch order stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -59,7 +99,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   };
 
   const handleEditProfile = () => {
-    Alert.alert('Edit Profile', 'Profile editing feature coming soon!');
+    setModalContent('personal');
+    setModalVisible(true);
+  };
+
+  const handleModalOpen = (component: 'personal' | 'addresses' | 'bankAccounts') => {
+    setModalContent(component);
+    setModalVisible(true);
   };
 
   const profileSections: { title: string; options: ProfileOption[] }[] = [
@@ -70,22 +116,25 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           icon: 'person',
           iconFamily: 'material',
           title: 'Personal Information',
-          subtitle: 'Name, email, phone',
-          action: 'navigate',
+          subtitle: 'Name, email, phone, GST',
+          action: 'modal',
+          modalComponent: 'personal',
         },
         {
           icon: 'location-on',
           iconFamily: 'material',
           title: 'Addresses',
           subtitle: 'Manage delivery addresses',
-          action: 'navigate',
+          action: 'modal',
+          modalComponent: 'addresses',
         },
         {
-          icon: 'payment',
+          icon: 'account-balance',
           iconFamily: 'material',
-          title: 'Payment Methods',
-          subtitle: 'Cards and payment options',
-          action: 'navigate',
+          title: 'Bank Accounts',
+          subtitle: 'Manage bank accounts',
+          action: 'modal',
+          modalComponent: 'bankAccounts',
         },
       ],
     },
@@ -160,7 +209,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   ];
 
   const renderIcon = (option: ProfileOption) => {
-    const iconColor = option.isDanger ? theme.colors.semantic.error : theme.colors.text. secondary;
+    const iconColor = option.isDanger ? theme.colors.semantic.error : theme.colors.text.secondary;
     const iconSize = 22;
 
     switch (option.iconFamily) {
@@ -180,6 +229,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       case 'logout':
         handleLogout();
         break;
+      case 'modal':
+        if (option.modalComponent) {
+          handleModalOpen(option.modalComponent);
+        }
+        break;
       case 'navigate':
         Alert.alert(option.title, `${option.title} feature coming soon!`);
         break;
@@ -188,19 +242,45 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     }
   };
 
+  const renderModalContent = () => {
+    switch (modalContent) {
+      case 'personal':
+        return <PersonalInformation />;
+      case 'addresses':
+        return <Addresses />;
+      case 'bankAccounts':
+        return <BankAccounts />;
+      default:
+        return null;
+    }
+  };
+
+  const getModalTitle = () => {
+    switch (modalContent) {
+      case 'personal':
+        return 'Personal Information';
+      case 'addresses':
+        return 'Addresses';
+      case 'bankAccounts':
+        return 'Bank Accounts';
+      default:
+        return '';
+    }
+  };
+
   return (
     <>
-      <StatusBar backgroundColor={theme.colors.secondary.main} barStyle="light-content" />
+      <StatusBar backgroundColor={theme.colors.primary.main} barStyle="light-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Feather name="arrow-left" size={24} color={theme.colors.text.inverse} />
+              <Feather name="arrow-left" size={24} color={theme.colors.text.onPrimary} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Profile</Text>
             <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-              <Feather name="menu" size={24} color={theme.colors.text.inverse} />
+              <Feather name="menu" size={24} color={theme.colors.text.onPrimary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -214,10 +294,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <View style={styles.profileHeader}>
             <View style={styles.profileImageContainer}>
               <View style={styles.profileImage}>
-                <Feather name="user" size={50} color={theme.colors.text.inverse} />
+                <Feather name="user" size={50} color={theme.colors.text.onPrimary} />
               </View>
               <TouchableOpacity style={styles.cameraButton}>
-                <MaterialIcons name="camera-alt" size={18} color={theme.colors.text.inverse} />
+                <MaterialIcons name="camera-alt" size={18} color={theme.colors.text.onPrimary} />
               </TouchableOpacity>
             </View>
             <Text style={styles.userName}>{user?.name || 'User Name'}</Text>
@@ -230,20 +310,26 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
             {/* Stats Row */}
             <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>15</Text>
-                <Text style={styles.statLabel}>Orders</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>3</Text>
-                <Text style={styles.statLabel}>Active</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>12</Text>
-                <Text style={styles.statLabel}>Completed</Text>
-              </View>
+              {loadingStats ? (
+                <ActivityIndicator size="small" color={theme.colors.primary.main} />
+              ) : (
+                <>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{orderStats.total_orders}</Text>
+                    <Text style={styles.statLabel}>Orders</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{orderStats.active_orders}</Text>
+                    <Text style={styles.statLabel}>Active</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{orderStats.delivered_orders}</Text>
+                    <Text style={styles.statLabel}>Completed</Text>
+                  </View>
+                </>
+              )}
             </View>
           </View>
 
@@ -305,7 +391,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                       ) : option.value ? (
                         <Text style={styles.optionValue}>{option.value}</Text>
                       ) : !option.isDanger ? (
-                        <Feather name="chevron-right" size={20} color={Colors.text.tertiary} />
+                        <Feather name="chevron-right" size={20} color={theme.colors.text.tertiary} />
                       ) : null}
                     </View>
                   </TouchableOpacity>
@@ -317,12 +403,31 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           {/* App Version */}
           <View style={styles.versionContainer}>
             <Text style={styles.versionText}>JaviApp Version 1.0.0</Text>
-            <Text style={styles.copyrightText}>© 2024 JaviApp. All rights reserved.</Text>
+            <Text style={styles.copyrightText}>© 2024 Javi Logistics. All rights reserved.</Text>
           </View>
         </ScrollView>
+
+        {/* Component Modal */}
+        <Modal
+          visible={modalVisible}
+          animationType="slide"
+          transparent={false}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalBackButton}>
+                <Feather name="arrow-left" size={24} color={theme.colors.text.primary} />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>{getModalTitle()}</Text>
+              <View style={{ width: 24 }} />
+            </View>
+            {renderModalContent()}
+          </SafeAreaView>
+        </Modal>
       </SafeAreaView>
     </>
   );
 };
 
-export default ProfileScreen;
+export default Profile;

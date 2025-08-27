@@ -197,4 +197,33 @@ export const useProfileStyles = createStyles((theme) => ({
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.tertiary,
   },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: theme.colors.background.primary,
+  },
+
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.background.primary,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.secondary,
+    ...theme.elevation[1],
+  },
+
+  modalBackButton: {
+    padding: theme.spacing.xs,
+  },
+
+  modalTitle: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semiBold,
+    color: theme.colors.text.primary,
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: theme.spacing.md,
+  },
 }));

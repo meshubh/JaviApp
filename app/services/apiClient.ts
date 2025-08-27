@@ -237,6 +237,29 @@ class ApiClient {
 
     return this.handleResponse<T>(response);
   }
+
+  async getUserData(): Promise<any> {
+    try {
+      const userDataStr = await AsyncStorage.getItem('userData');
+      if (userDataStr) {
+        return JSON.parse(userDataStr);
+      }
+      
+      // If no userData stored, decode from token
+      const token = await AsyncStorage.getItem('authToken');
+      if (token) {
+        // Decode JWT payload (basic decoding without verification)
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+        return decoded;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting user data:', error);
+      return null;
+    }
+  }
 }
 
 export const apiClient = new ApiClient();
