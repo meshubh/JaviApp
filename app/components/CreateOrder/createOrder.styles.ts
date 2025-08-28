@@ -204,12 +204,16 @@ export const useCreateOrderStyles = createStyles((theme) => ({
     fontSize: theme.typography.fontSize.md,
     color: theme.colors.text.primary,
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
     marginRight: theme.spacing.md,
   },
   toggleDescription: {
-    fontSize: theme.typography.fontSize.xs,
+    fontSize: theme.typography.fontSize.s,
     color: theme.colors.text.secondary,
     marginTop: theme.spacing.xs,
+    marginLeft: theme.spacing.sm
   },
   
   // Address Card Styles

@@ -5,7 +5,7 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 // Environment configuration
 const ENV = {
   development: {
-    API_URL: 'http://localhost:8000',
+    API_URL: 'http://10.0.2.2:8000',
   },
   production: {
     API_URL: 'https://javilogistics.com',

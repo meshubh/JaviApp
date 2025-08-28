@@ -270,7 +270,9 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
               <Text style={styles.infoValue}>
                 {order.number_of_boxes > 0 && `${order.number_of_boxes} box${order.number_of_boxes > 1 ? 'es' : ''}`}
                 {order.number_of_boxes > 0 && order.number_of_bundles > 0 && ', '}
-                {order.number_of_bundles > 0 && `${order.number_of_bundles} invoice${order.number_of_bundles > 1 ? 's' : ''}`}
+                {order.number_of_bundles > 0 && `${order.number_of_bundles} bundle${order.number_of_bundles > 1 ? 's' : ''}`}
+                {order.number_of_boxes > 0 && order.number_of_bundles > 0 && order.number_of_invoices > 0 && ', '}
+                {order.number_of_invoices > 0 && `${order.number_of_invoices} invoice${order.number_of_invoices > 1 ? 's' : ''}`}
               </Text>
             </View>
             {order.total_weight && (

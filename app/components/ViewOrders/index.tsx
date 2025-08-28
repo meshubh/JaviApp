@@ -99,6 +99,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
       const response: PaginatedResponse<OrderListItem> = await orderService.getClientOrders(params);
 
       if (reset) {
+        console.log('Orders fetched:', response.results[0]);
         setOrders(response.results);
       } else {
         setOrders([...orders, ...response.results]);
@@ -227,7 +228,9 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
             <Text style={styles.packageText}>
               {item.number_of_boxes > 0 && `${item.number_of_boxes} box${item.number_of_boxes > 1 ? 'es' : ''}`}
               {item.number_of_boxes > 0 && item.number_of_bundles > 0 && ', '}
-              {item.number_of_bundles > 0 && `${item.number_of_bundles} invoice${item.number_of_bundles > 1 ? 's' : ''}`}
+              {item.number_of_bundles > 0 && `${item.number_of_bundles} bundle${item.number_of_bundles > 1 ? 's' : ''}`}
+              {item.number_of_boxes > 0 && item.number_of_bundles > 0 && item.number_of_invoices > 0 && ', '}
+              {item.number_of_invoices > 0 && `${item.number_of_invoices} invoice${item.number_of_invoices > 1 ? 's' : ''}`}
             </Text>
           </View>
         </View>

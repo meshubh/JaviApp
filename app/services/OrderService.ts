@@ -4,6 +4,9 @@ import { apiClient } from './apiClient';
 export interface Contract {
   id: string;
   contract_number: string;
+  title: string;
+  pricing_model: string;
+  value: number;
   client: string;
   rate_per_box?: number;
   rate_per_bundle?: number;
@@ -33,6 +36,7 @@ export interface OrderListItem {
   drop_address_text?: string;
   number_of_boxes: number;
   number_of_bundles: number;
+  number_of_invoices: number;
   total_packages: number;
   status: string;
   priority: 'Normal' | 'Urgent' | 'High';
@@ -88,7 +92,8 @@ export interface CreateOrderData {
   drop_address_text?: string;
   drop_address_place_id?: string;
   number_of_boxes: number;
-  number_of_invoices: number; // Will be stored as bundles
+  number_of_bundles: number;
+  number_of_invoices: number;
   expected_pickup_date: string;
   package_description?: string;
   special_instructions?: string;

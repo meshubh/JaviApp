@@ -16,7 +16,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { Address, Contract, CreateOrderData, orderService } from '../../services/OrderService';
@@ -48,6 +48,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   const [dropAddressText, setDropAddressText] = useState('');
   const [dropAddressPlaceId, setDropAddressPlaceId] = useState<string>(''); // New field for Google Place ID
   const [numberOfBoxes, setNumberOfBoxes] = useState('0');
+  const [numberOfBundles, setNumberOfBundles] = useState('0');
   const [numberOfInvoices, setNumberOfInvoices] = useState('0');
   const [packageDescription, setPackageDescription] = useState('');
   const [specialInstructions, setSpecialInstructions] = useState('');
@@ -59,6 +60,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   const [customerEmail, setCustomerEmail] = useState('');
   const [expectedPickupDate, setExpectedPickupDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   
   // UI state
   const [isLoading, setIsLoading] = useState(false);
@@ -116,6 +118,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     setDropAddressText('');
     setDropAddressPlaceId('');
     setNumberOfBoxes('0');
+    setNumberOfBundles('0');
     setNumberOfInvoices('0');
     setPackageDescription('');
     setSpecialInstructions('');
@@ -145,6 +148,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     }
     
     const boxes = parseInt(numberOfBoxes) || 0;
+    const bundles = parseInt(numberOfBundles) || 0;
     const invoices = parseInt(numberOfInvoices) || 0;
     
     if (boxes === 0 && invoices === 0) {
@@ -173,6 +177,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
         drop_address_text: dropAddressText || undefined,
         drop_address_place_id: dropAddressPlaceId || undefined, // Include Google Place ID if available
         number_of_boxes: parseInt(numberOfBoxes) || 0,
+        number_of_bundles: parseInt(numberOfBundles) || 0,
         number_of_invoices: parseInt(numberOfInvoices) || 0,
         expected_pickup_date: expectedPickupDate.toISOString(),
         package_description: packageDescription || undefined,
@@ -216,12 +221,25 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     }
   };
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setExpectedPickupDate(selectedDate);
-    }
-  };
+const onDateChange = (event: any, selectedDate?: Date) => {
+  setShowDatePicker(false);
+  if (selectedDate) {
+    setExpectedPickupDate(selectedDate);
+    // Show time picker after date is selected
+    setShowTimePicker(true);
+  }
+};
+
+const onTimeChange = (event: any, selectedTime?: Date) => {
+  setShowTimePicker(false);
+  if (selectedTime) {
+    // Combine the selected date with the new time
+    const updatedDateTime = new Date(expectedPickupDate);
+    updatedDateTime.setHours(selectedTime.getHours());
+    updatedDateTime.setMinutes(selectedTime.getMinutes());
+    setExpectedPickupDate(updatedDateTime);
+  }
+};
 
   if (isLoadingData) {
     return (
@@ -266,7 +284,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                 data={contracts}
                 value={selectedContract}
                 onSelect={setSelectedContract}
-                displayField={(contract: Contract) => `${contract.contract_number} - ${contract.status}`}
+                displayField={(contract: Contract) => `${contract.title} - ${contract.pricing_model}`}
                 searchFields={(contract: Contract) => [
                   contract.contract_number,
                   contract.client,
@@ -281,14 +299,14 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                       color: isSelected ? theme.colors.primary.dark : theme.colors.text.primary,
                       fontWeight: isSelected ? '600' : '400',
                     }}>
-                      {contract.contract_number}
+                      {contract.title}
                     </Text>
                     <Text style={{
                       fontSize: 14,
                       color: theme.colors.text.secondary,
                       marginTop: 2,
                     }}>
-                      {contract.status} • {contract.client}
+                      ₹ {contract.value} • {contract.pricing_model}
                     </Text>
                   </View>
                 )}
@@ -345,8 +363,9 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Package Information</Text>
               
-              <View style={{ flexDirection: 'row' }}>
-                <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
+              {/* First row: Boxes and Bundles */}
+              <View style={{ flexDirection: 'row', marginBottom: theme.spacing.md }}>
+                <View style={[styles.formGroup, { flex: 1, marginRight: theme.spacing.sm, marginBottom: 0 }]}>
                   <Text style={styles.formLabel}>
                     Boxes <Text style={styles.requiredAsterisk}>*</Text>
                   </Text>
@@ -372,30 +391,57 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                   </View>
                 </View>
 
-                <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
+                <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing.sm, marginBottom: 0 }]}>
                   <Text style={styles.formLabel}>
-                    Invoices <Text style={styles.requiredAsterisk}>*</Text>
+                    Bundles <Text style={styles.requiredAsterisk}>*</Text>
                   </Text>
                   <View style={styles.counterContainer}>
-                    <TouchableOpacity 
-                      style={styles.counterButton}
-                      onPress={() => setNumberOfInvoices(String(Math.max(0, parseInt(numberOfInvoices) - 1)))}
-                    >
-                      <Feather name="minus" size={20} color={theme.colors.text.primary} />
-                    </TouchableOpacity>
-                    <TextInput
-                      style={styles.counterInput}
-                      value={numberOfInvoices}
-                      onChangeText={setNumberOfInvoices}
-                      keyboardType="numeric"
-                    />
-                    <TouchableOpacity 
-                      style={styles.counterButton}
-                      onPress={() => setNumberOfInvoices(String(parseInt(numberOfInvoices) + 1))}
-                    >
-                      <Feather name="plus" size={20} color={theme.colors.text.primary} />
-                    </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={styles.counterButton}
+                        onPress={() => setNumberOfBundles(String(Math.max(0, parseInt(numberOfBundles) - 1)))}
+                      >
+                        <Feather name="minus" size={20} color={theme.colors.text.primary} />
+                      </TouchableOpacity>
+                      <TextInput
+                        style={styles.counterInput}
+                        value={numberOfBundles}
+                        onChangeText={setNumberOfBundles}
+                        keyboardType="numeric"
+                      />
+                      <TouchableOpacity 
+                        style={styles.counterButton}
+                        onPress={() => setNumberOfBundles(String(parseInt(numberOfBundles) + 1))}
+                      >
+                        <Feather name="plus" size={20} color={theme.colors.text.primary} />
+                      </TouchableOpacity>
                   </View>
+                </View>
+              </View>
+
+              {/* Second row: Invoices taking full width */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>
+                  Invoices <Text style={styles.requiredAsterisk}>*</Text>
+                </Text>
+                <View style={styles.counterContainer}>
+                  <TouchableOpacity 
+                    style={styles.counterButton}
+                    onPress={() => setNumberOfInvoices(String(Math.max(0, parseInt(numberOfInvoices) - 1)))}
+                  >
+                    <Feather name="minus" size={20} color={theme.colors.text.primary} />
+                  </TouchableOpacity>
+                  <TextInput
+                    style={styles.counterInput}
+                    value={numberOfInvoices}
+                    onChangeText={setNumberOfInvoices}
+                    keyboardType="numeric"
+                  />
+                  <TouchableOpacity 
+                    style={styles.counterButton}
+                    onPress={() => setNumberOfInvoices(String(parseInt(numberOfInvoices) + 1))}
+                  >
+                    <Feather name="plus" size={20} color={theme.colors.text.primary} />
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -443,7 +489,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
               <View style={styles.toggleContainer}>
                 <View style={styles.toggleLabel}>
                   <MaterialIcons name="warning" size={20} color={theme.colors.semantic.warning} />
-                  <Text style={styles.toggleLabel}>Fragile Package</Text>
+                  <Text style={styles.toggleDescription}>Fragile Package</Text>
                 </View>
                 <Switch
                   value={isFragile}
@@ -459,7 +505,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
               <View style={styles.toggleContainer}>
                 <View style={styles.toggleLabel}>
                   <MaterialIcons name="edit" size={20} color={theme.colors.primary.main} />
-                  <Text style={styles.toggleLabel}>Requires Signature</Text>
+                  <Text style={styles.toggleDescription}>Requires Signature</Text>
                 </View>
                 <Switch
                   value={requiresSignature}
@@ -479,7 +525,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
               
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>
-                  Expected Pickup Date <Text style={styles.requiredAsterisk}>*</Text>
+                  Expected Pickup Date & Time <Text style={styles.requiredAsterisk}>*</Text>
                 </Text>
                 <TouchableOpacity 
                   style={styles.datePickerButton}
@@ -492,6 +538,10 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',
+                    })} at {expectedPickupDate.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true,
                     })}
                   </Text>
                   <Feather name="chevron-down" size={16} color={theme.colors.text.tertiary} />
@@ -505,6 +555,15 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                   display="default"
                   onChange={onDateChange}
                   minimumDate={new Date()}
+                />
+              )}
+
+              {showTimePicker && (
+                <DateTimePicker
+                  value={expectedPickupDate}
+                  mode="time"
+                  display="default"
+                  onChange={onTimeChange}
                 />
               )}
 
