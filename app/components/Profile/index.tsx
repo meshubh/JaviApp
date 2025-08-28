@@ -20,6 +20,7 @@ import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
 import Addresses from '../Addresses/index';
 import BankAccounts from '../BankAccounts/index';
+import { CustomHeader } from '../CustomHeader';
 import PersonalInformation from '../PersonalInformation/index';
 import { useProfileStyles } from './profile.styles';
 
@@ -273,17 +274,12 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
       <StatusBar backgroundColor={theme.colors.primary.main} barStyle="light-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Feather name="arrow-left" size={24} color={theme.colors.text.onPrimary} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Profile</Text>
-            <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-              <Feather name="menu" size={24} color={theme.colors.text.onPrimary} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <CustomHeader
+          navigation={navigation}
+          title="Profile"
+          showBack={false}
+          showMenu={true}
+        />
 
         <ScrollView 
           style={styles.content}

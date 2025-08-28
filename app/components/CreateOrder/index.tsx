@@ -22,6 +22,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Address, Contract, CreateOrderData, orderService } from '../../services/OrderService';
 import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
+import { CustomHeader } from '../CustomHeader';
 import GoogleAddressSearchable from '../GoogleAddressSearchable/index';
 import SearchableDropdown from '../common/SearchableDropdown';
 import { useCreateOrderStyles } from './createOrder.styles';
@@ -238,17 +239,12 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
       <StatusBar backgroundColor={theme.colors.primary.main} barStyle="dark-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Feather name="arrow-left" size={24} color={theme.colors.text.onPrimary} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Create Order</Text>
-            <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-              <Feather name="menu" size={24} color={theme.colors.text.onPrimary} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <CustomHeader
+          navigation={navigation}
+          title="Create Order"
+          showBack={true}
+          showMenu={false}
+        />
         
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

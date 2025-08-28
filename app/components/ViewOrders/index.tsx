@@ -18,6 +18,7 @@ import { OrderListItem, orderService, PaginatedResponse } from '../../services/O
 import { Colors } from '../../theme';
 import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
+import { CustomHeader } from '../CustomHeader';
 import { useViewOrdersStyles } from './viewOrders.styles';
 
 interface ViewOrdersScreenProps {
@@ -304,25 +305,12 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
       <StatusBar backgroundColor={theme.colors.secondary.main} barStyle="light-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Feather name="arrow-left" size={24} color={theme.colors.text.inverse} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>My Orders</Text>
-            <View style={styles.headerActions}>
-              <TouchableOpacity 
-                onPress={() => navigation.navigate('CreateOrder')} 
-                style={styles.addButton}
-              >
-                <Feather name="plus" size={24} color={theme.colors.text.inverse} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-                <Feather name="menu" size={24} color={theme.colors.text.inverse} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+        <CustomHeader
+          navigation={navigation}
+          title="My Orders"
+          showBack={false}
+          showMenu={true}
+        />
 
         {/* Filter Tabs */}
         <View style={styles.filterContainer}>

@@ -16,6 +16,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { DashboardStats, orderService } from '../../services/OrderService';
 import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
+import { CustomHeader } from '../CustomHeader';
 import NotificationDropdown from '../NotificationDropdown/index';
 import { useHomeStyles } from './home.styles';
 
@@ -195,12 +196,26 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const hasNotifications = dashboardStats && dashboardStats.recent_activity.length > 0;
 
+  const NotificationIcon = () => (
+    <>
+    <Ionicons name="notifications-outline" size={24} color="white" />
+    {hasNotifications && (
+      <Animated.View 
+        style={[
+          styles.notificationBadge,
+          { transform: [{ scale: notificationBadgeScale }] }
+        ]} 
+      />
+    )}
+    </>
+  );
+
   return (
     <>
       <StatusBar backgroundColor={theme.colors.primary.main} barStyle="light-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
+        {/* <View style={styles.header}>
           <View style={styles.headerContent}>
             <TouchableOpacity 
               onPress={() => navigation.openDrawer()} 
@@ -226,7 +241,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               )}
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
+        <CustomHeader
+          navigation={navigation}
+          title="Javi Logistics"
+          rightComponent={
+            <TouchableOpacity 
+              style={styles.notificationButton}
+              onPress={() => setNotificationDropdownVisible(true)}
+            >
+              <NotificationIcon />
+            </TouchableOpacity>
+          }
+        />
 
         <ScrollView
           style={styles.content}

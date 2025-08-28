@@ -19,6 +19,7 @@ import { OrderDetail, orderService } from '../../services/OrderService';
 import { Colors, Spacing } from '../../theme';
 import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
+import { CustomHeader } from '../CustomHeader';
 import { useOrderDetailsStyles } from './orderDetails.styles';
 
 interface OrderDetailsScreenProps {
@@ -219,17 +220,12 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
       <StatusBar backgroundColor={theme.colors.secondary.main} barStyle="light-content" />
       <SafeAreaView style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackButton}>
-              <Feather name="arrow-left" size={24} color={theme.colors.text.inverse} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Order #{order.order_number}</Text>
-            <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-              <Feather name="menu" size={24} color={theme.colors.text.inverse} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <CustomHeader
+          navigation={navigation}
+          title={`Order #${order.order_number}`}
+          showBack={true}
+          showMenu={false}
+        />
 
         <ScrollView
           style={styles.content}

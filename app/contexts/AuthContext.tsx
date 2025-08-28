@@ -2,7 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { authService } from '../services/AuthService';
-import { AuthContextType, LoginResponse, User } from '../types';
+import { AuthContextType, User } from '../types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -43,25 +43,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (email: string, password: string): Promise<void> => {
-    try {
-      const response: LoginResponse = await authService.login({ email, password });
-
-      console.log('Login successful:', response);
-
-      // Store auth data
-      await Promise.all([
-        AsyncStorage.setItem('authToken', response.token),
-        AsyncStorage.setItem('userData', JSON.stringify(response.user)),
-        response.refreshToken ? AsyncStorage.setItem('refreshToken', response.refreshToken) : Promise.resolve(),
-      ]);
-
-      setToken(response.token);
-      setUser(response.user);
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
+  const login = async (email: string, password: string) => {
+    const response = await authService.login({
+      email,
+      password
+    });
+    // authService now handles token storage automatically
+    setUser(response.user);
   };
 
   const logout = async (): Promise<void> => {

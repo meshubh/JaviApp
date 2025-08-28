@@ -1,254 +1,267 @@
 // app/services/apiClient.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '../config/constants';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 
-interface ApiError {
-  message: string;
-  errors?: Record<string, string[]>;
-  status?: number;
-}
+// Environment configuration
+const ENV = {
+  development: {
+    API_URL: 'http://localhost:8000',
+  },
+  production: {
+    API_URL: 'https://javilogistics.com',
+  },
+};
 
-class ApiClient {
-  private baseURL: string;
-  private refreshPromise: Promise<string> | null = null;
+// Get current environment - you can switch this manually or use env variables
+const currentEnv = 'development'; // Change to 'production' for production testing
+const API_BASE_URL = ENV[currentEnv].API_URL;
 
-  constructor() {
-    this.baseURL = API_BASE_URL || 'https://javilogistics.com';
-  }
+console.log(`API Base URL: ${API_BASE_URL}`);
 
-  private async getAuthHeader(): Promise<HeadersInit> {
+// Create axios instance
+const axiosInstance: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+});
+
+// Token refresh flag to prevent multiple refresh attempts
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string | null) => void;
+  reject: (error: any) => void;
+}> = [];
+
+// Process the queue of failed requests after token refresh
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
+// Request interceptor - Add auth token to requests
+axiosInstance.interceptors.request.use(
+  async (config) => {
     const token = await AsyncStorage.getItem('authToken');
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-    };
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    // Log requests in development
+    if (__DEV__) {
+      console.log(`📤 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, {
+        params: config.params,
+        data: config.data,
+      });
+    }
+    
+    return config;
+  },
+  (error) => {
+    if (__DEV__) {
+      console.error('❌ Request Error:', error);
+    }
+    return Promise.reject(error);
   }
+);
 
-  private async handleResponse<T>(response: Response): Promise<T> {
-    if (!response.ok) {
-      let errorData: ApiError;
-      try {
-        errorData = await response.json();
-      } catch {
-        errorData = {
-          message: `HTTP Error ${response.status}: ${response.statusText}`,
-          status: response.status,
-        };
-      }
+// Response interceptor - Handle errors and token refresh
+axiosInstance.interceptors.response.use(
+  (response) => {
+    // Log successful responses in development
+    if (__DEV__) {
+      console.log(`📥 ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+        status: response.status,
+        data: response.data,
+      });
+    }
+    return response;
+  },
+  async (error: AxiosError) => {
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    
+    if (__DEV__) {
+      console.error(`❌ Response Error: ${error.config?.url}`, {
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
 
-      // Handle specific error cases
-      if (response.status === 401) {
-        // Token expired or invalid - try to refresh
-        const refreshed = await this.refreshToken();
-        if (!refreshed) {
-          // Clear auth data and redirect to login
-          await this.clearAuthData();
-          throw new Error('Session expired. Please login again.');
-        }
-        // Retry the request with new token
-        return this.retryRequest<T>(response.url, {
-          method: response.headers.get('method') || 'GET',
-          body: response.headers.get('body') || undefined,
+    // Handle 401 Unauthorized - Try to refresh token
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          if (token && originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+          }
+          return axiosInstance(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
         });
       }
 
-      if (response.status === 403) {
-        throw new Error('You do not have permission to perform this action.');
-      }
+      originalRequest._retry = true;
+      isRefreshing = true;
 
-      if (response.status === 404) {
-        throw new Error('The requested resource was not found.');
-      }
-
-      if (response.status === 422) {
-        // Validation error
-        if (errorData.errors) {
-          const firstError = Object.values(errorData.errors)[0];
-          throw new Error(firstError[0] || 'Validation error occurred.');
-        }
-      }
-
-      throw new Error(errorData.message || `Request failed with status ${response.status}`);
-    }
-
-    // Handle empty responses
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      return {} as T;
-    }
-
-    return response.json();
-  }
-
-  private async refreshToken(): Promise<boolean> {
-    // Prevent multiple simultaneous refresh attempts
-    if (this.refreshPromise) {
       try {
-        await this.refreshPromise;
-        return true;
-      } catch {
-        return false;
+        const refreshToken = await AsyncStorage.getItem('refreshToken');
+        
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        const response = await axios.post(`${API_BASE_URL}/api/auth/refresh/`, {
+          refresh: refreshToken,
+        });
+
+        const { access, refresh } = response.data;
+        
+        await AsyncStorage.setItem('authToken', access);
+        if (refresh) {
+          await AsyncStorage.setItem('refreshToken', refresh);
+        }
+        
+        // Update the authorization header for the original request
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${access}`;
+        }
+        
+        processQueue(null, access);
+        
+        // Retry the original request with new token
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        
+        // Clear auth data and redirect to login
+        await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userData']);
+        
+        // You might want to trigger navigation to login here
+        // navigationRef.current?.navigate('Login');
+        
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 
-    this.refreshPromise = this.performTokenRefresh();
-    
-    try {
-      await this.refreshPromise;
-      return true;
-    } catch {
-      return false;
-    } finally {
-      this.refreshPromise = null;
-    }
-  }
-
-  private async performTokenRefresh(): Promise<string> {
-    const refreshToken = await AsyncStorage.getItem('refreshToken');
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
-    }
-
-    const response = await fetch(`${this.baseURL}/api/auth/refresh/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refresh: refreshToken }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to refresh token');
-    }
-
-    const data = await response.json();
-    await AsyncStorage.setItem('authToken', data.access);
-    
-    if (data.refresh) {
-      await AsyncStorage.setItem('refreshToken', data.refresh);
+    // Handle other error statuses
+    if (error.response?.status === 403) {
+      throw new Error('You do not have permission to perform this action.');
     }
     
-    return data.access;
-  }
-
-  private async retryRequest<T>(url: string, options: RequestInit): Promise<T> {
-    const headers = await this.getAuthHeader();
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-    return this.handleResponse<T>(response);
-  }
-
-  private async clearAuthData(): Promise<void> {
-    await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userData']);
-  }
-
-  async get<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
-    const headers = await this.getAuthHeader();
+    if (error.response?.status === 404) {
+      throw new Error('The requested resource was not found.');
+    }
     
-    let url = `${this.baseURL}${endpoint}`;
-    if (params) {
-      const queryString = new URLSearchParams(params).toString();
-      if (queryString) {
-        url += `?${queryString}`;
+    if (error.response?.status === 422) {
+      const errorData = error.response.data as any;
+      if (errorData?.errors) {
+        const firstError = Object.values(errorData.errors)[0] as string[];
+        throw new Error(firstError[0] || 'Validation error occurred.');
       }
     }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-    });
-
-    return this.handleResponse<T>(response);
+    
+    if (error.response?.status && error.response.status >= 500) {
+      throw new Error('Server error. Please try again later.');
+    }
+    
+    // Network error
+    if (!error.response) {
+      throw new Error('Network error. Please check your connection.');
+    }
+    
+    return Promise.reject(error);
   }
+);
 
-  async post<T>(endpoint: string, data?: any): Promise<T> {
-    const headers = await this.getAuthHeader();
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: 'POST',
-      headers,
-      body: data ? JSON.stringify(data) : undefined,
-    });
+// API methods
+export const apiClient = {
+  // GET request
+  get: async <T = any>(endpoint: string, params?: Record<string, any>): Promise<T> => {
+    const response = await axiosInstance.get<T>(endpoint, { params });
+    return response.data;
+  },
 
-    return this.handleResponse<T>(response);
-  }
+  // POST request
+  post: async <T = any>(endpoint: string, data?: any): Promise<T> => {
+    const response = await axiosInstance.post<T>(endpoint, data);
+    return response.data;
+  },
 
-  async put<T>(endpoint: string, data: any): Promise<T> {
-    const headers = await this.getAuthHeader();
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(data),
-    });
+  // PUT request
+  put: async <T = any>(endpoint: string, data: any): Promise<T> => {
+    const response = await axiosInstance.put<T>(endpoint, data);
+    return response.data;
+  },
 
-    return this.handleResponse<T>(response);
-  }
+  // PATCH request
+  patch: async <T = any>(endpoint: string, data: any): Promise<T> => {
+    const response = await axiosInstance.patch<T>(endpoint, data);
+    return response.data;
+  },
 
-  async patch<T>(endpoint: string, data: any): Promise<T> {
-    const headers = await this.getAuthHeader();
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify(data),
-    });
+  // DELETE request
+  delete: async <T = any>(endpoint: string): Promise<T> => {
+    const response = await axiosInstance.delete<T>(endpoint);
+    return response.data;
+  },
 
-    return this.handleResponse<T>(response);
-  }
-
-  async delete<T>(endpoint: string): Promise<T> {
-    const headers = await this.getAuthHeader();
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: 'DELETE',
-      headers,
-    });
-
-    return this.handleResponse<T>(response);
-  }
-
-  // File upload support
-  async uploadFile<T>(endpoint: string, file: any, additionalData?: Record<string, any>): Promise<T> {
-    const token = await AsyncStorage.getItem('authToken');
+  // File upload
+  uploadFile: async <T = any>(
+    endpoint: string,
+    file: any,
+    additionalData?: Record<string, any>,
+    onUploadProgress?: (progressEvent: any) => void
+  ): Promise<T> => {
     const formData = new FormData();
     
-    // Add file to form data
     formData.append('file', {
       uri: file.uri,
       type: file.type || 'image/jpeg',
       name: file.name || 'photo.jpg',
     } as any);
     
-    // Add additional data if provided
     if (additionalData) {
       Object.keys(additionalData).forEach(key => {
         formData.append(key, additionalData[key]);
       });
     }
 
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: 'POST',
+    const response = await axiosInstance.post<T>(endpoint, formData, {
       headers: {
-        'Accept': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
+        'Content-Type': 'multipart/form-data',
       },
-      body: formData,
+      onUploadProgress,
     });
+    
+    return response.data;
+  },
 
-    return this.handleResponse<T>(response);
-  }
-
-  async getUserData(): Promise<any> {
+  // Get user data from storage or token
+  getUserData: async (): Promise<any> => {
     try {
       const userDataStr = await AsyncStorage.getItem('userData');
       if (userDataStr) {
         return JSON.parse(userDataStr);
       }
       
-      // If no userData stored, decode from token
       const token = await AsyncStorage.getItem('authToken');
       if (token) {
-        // Decode JWT payload (basic decoding without verification)
+        // Basic JWT decode (without verification)
         const payload = token.split('.')[1];
         const decoded = JSON.parse(atob(payload));
         return decoded;
@@ -259,10 +272,31 @@ class ApiClient {
       console.error('Error getting user data:', error);
       return null;
     }
-  }
+  },
+
+  // Set custom headers (useful for specific requests)
+  setHeader: (key: string, value: string) => {
+    axiosInstance.defaults.headers.common[key] = value;
+  },
+
+  // Remove custom header
+  removeHeader: (key: string) => {
+    delete axiosInstance.defaults.headers.common[key];
+  },
+
+  // Get current environment
+  getCurrentEnvironment: () => currentEnv,
+
+  // Get current API URL
+  getApiUrl: () => API_BASE_URL,
+};
+
+// Export types
+export interface ApiError {
+  message: string;
+  errors?: Record<string, string[]>;
+  status?: number;
 }
 
-export const apiClient = new ApiClient();
-
-// Export error types for use in components
-export type { ApiError };
+// Export axios instance if needed for custom configurations
+export { axiosInstance };

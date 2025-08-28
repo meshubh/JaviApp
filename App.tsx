@@ -1,46 +1,48 @@
-// index.tsx
+// App.tsx
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { ActivityIndicator, StyleSheet } from 'react-native';
+import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Import providers and contexts
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './app/contexts/AuthContext';
 
 // Import screens
-import CreateOrder from './components/CreateOrder/index';
-import HomeScreen from './components/HomeScreen/index';
-import LoginScreen from './components/Login';
-import OrderDetailsScreen from './components/OrderDetails/index';
-import Profile from './components/Profile/index';
-import ViewOrders from './components/ViewOrders/index';
+import CreateOrder from './app/components/CreateOrder';
+import HomeScreen from './app/components/HomeScreen';
+import LoginScreen from './app/components/Login';
+import OrderDetailsScreen from './app/components/OrderDetails';
+import Profile from './app/components/Profile';
+import ViewOrders from './app/components/ViewOrders';
 
 // Import navigation components
-import CustomDrawer from './components/CustomDrawer/index';
+import CustomDrawer from './app/components/CustomDrawer';
 
 // Import types and theme
-import { Colors } from './theme/colors';
-import { ThemeProvider, useTheme } from './theme/themeContext';
-import { RootStackParamList } from './types/navigation';
+import { ThemeProvider } from './app/theme/themeContext';
+import { RootStackParamList } from './app/types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Drawer = createDrawerNavigator<RootStackParamList>();
 
 // Loading Screen Component
 const LoadingScreen: React.FC = () => {
-  const { theme } = useTheme();
+  // Temporarily use a hardcoded color until theme is loaded
   return (
-  <LinearGradient
-    colors={Colors.gradients.main}
-    style={styles.loadingContainer}
-  >
-    <ActivityIndicator size="large" color={theme.colors.primary.main} />
-  </LinearGradient>
-)};
+    <LinearGradient
+      colors={['#4A90E2', '#50E3C2']}
+      style={styles.loadingContainer}
+    >
+      <ActivityIndicator size="large" color="#FFFFFF" />
+    </LinearGradient>
+  );
+};
 
 // Drawer Navigator Component
 const DrawerNavigator: React.FC = () => {
@@ -53,7 +55,7 @@ const DrawerNavigator: React.FC = () => {
           width: '75%',
         },
         drawerType: 'slide',
-        overlayColor: Colors.ui.overlay,
+        overlayColor: 'rgba(0,0,0,0.5)',
         swipeEnabled: true,
         swipeEdgeWidth: 100,
       }}
@@ -73,14 +75,13 @@ const AuthenticatedNavigator: React.FC = () => {
       <Stack.Screen
         name="Home"
         component={DrawerNavigator}
-        options={{ animation: 'fade', headerShown: false }}
+        options={{ animation: 'fade' }}
       />
       <Stack.Screen
         name="OrderDetails"
         component={OrderDetailsScreen}
         options={{ 
-          animation: 'slide_from_right',
-          headerShown: false 
+          animation: 'slide_from_right'
         }}
       />
     </Stack.Navigator>
@@ -94,40 +95,43 @@ const Navigation: React.FC = () => {
   if (isLoading) {
     return <LoadingScreen />;
   }
+
   console.log('User authentication status:', user ? 'Logged in' : 'Not logged in');
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {user ? (
-        <Stack.Screen
-          name="Home"
-          component={AuthenticatedNavigator}
-          options={{ animation: 'fade' }}
-        />
-      ) : (
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ animation: 'slide_from_right' }}
-        />
-      )}
-    </Stack.Navigator>
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {user ? (
+          <Stack.Screen
+            name="Home"
+            component={AuthenticatedNavigator}
+            options={{ animation: 'fade' }}
+          />
+        ) : (
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ animation: 'slide_from_right' }}
+          />
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 };
 
 // Main App Component
 export default function App() {
   return (
-    <ThemeProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
         <SafeAreaProvider>
           <AuthProvider>
-            <StatusBar style="dark" backgroundColor={Colors.gradients.main[0]} />
+            <StatusBar style="dark" />
             <Navigation />
           </AuthProvider>
         </SafeAreaProvider>
-      </GestureHandlerRootView>
-    </ThemeProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 
