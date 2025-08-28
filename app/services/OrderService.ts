@@ -239,13 +239,13 @@ class OrderService {
 
   getStatusIcon(status: string): string {
     const statusIcons: Record<string, string> = {
-      'Created': 'file-text',
-      'Ready to Pick': 'package',
-      'Picked': 'check-circle',
-      'In Transit': 'truck',
-      'Out for Delivery': 'navigation',
-      'Delivered': 'check-square',
-      'Cancelled': 'x-circle',
+      'Created': 'description',
+      'Ready to Pick': 'inventory_2',
+      'Picked': 'check_circle',
+      'In Transit': 'local_shipping',
+      'Out for Delivery': 'near_me',
+      'Delivered': 'done_all',
+      'Cancelled': 'cancel',
     };
     return statusIcons[status] || 'info';
   }

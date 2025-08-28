@@ -14,10 +14,10 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
+import {
   BankAccount,
   CreateBankAccountData,
-  profileService 
+  profileService
 } from '../../services/ProfileService';
 import { useTheme } from '../../theme/themeContext';
 import { useBankAccountsStyles } from './bankAccounts.styles';
@@ -188,8 +188,6 @@ const BankAccounts: React.FC = () => {
     switch (type) {
       case 'Savings':
         return 'savings';
-      case 'Business':
-        return 'business';
       case 'Current':
       default:
         return 'account-balance';
@@ -395,7 +393,7 @@ const BankAccounts: React.FC = () => {
               <View style={styles.formSection}>
                 <Text style={styles.inputLabel}>Account Type *</Text>
                 <View style={styles.typeSelector}>
-                  {(['Savings', 'Current', 'Business'] as const).map((type) => (
+                  {(['Savings', 'Current'] as const).map((type) => (
                     <TouchableOpacity
                       key={type}
                       style={[
