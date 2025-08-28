@@ -2,24 +2,46 @@
 import { Feather } from '@expo/vector-icons';
 import React, { useCallback, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { apiClient } from '../../services/apiClient';
 import { useTheme } from '../../theme/themeContext';
 import { useGoogleAddressSearchableStyles } from './googleAddressSearchable.styles';
 
-export interface GooglePlaceResult {
-  place_id: string;
-  description: string;
-  structured_formatting: {
-    main_text: string;
-    secondary_text: string;
+// Updated interface for hybrid results
+export interface AddressSuggestion {
+  place_prediction: {
+    place_id: string;
+    text: {
+      text: string;
+    };
+    structured_format: {
+      main_text: {
+        text: string;
+      };
+      secondary_text?: {
+        text: string;
+      };
+    };
+  };
+  source: 'local' | 'google';
+  address_id?: string; // For local addresses
+  google_place_id?: string; // For Google addresses
+}
+
+// Response from hybrid search API
+interface HybridSearchResponse {
+  suggestions: AddressSuggestion[];
+  source_counts: {
+    local: number;
+    google: number;
   };
 }
 
@@ -27,9 +49,8 @@ interface GoogleAddressSearchableProps {
   label: string;
   required?: boolean;
   value: string;
-  onSelect: (address: string, placeId?: string) => void;
+  onSelect: (address: string, addressId?: string) => void;
   placeholder?: string;
-  googleApiKey: string;
 }
 
 const GoogleAddressSearchable: React.FC<GoogleAddressSearchableProps> = ({
@@ -37,19 +58,19 @@ const GoogleAddressSearchable: React.FC<GoogleAddressSearchableProps> = ({
   required = false,
   value,
   onSelect,
-  placeholder = "Search for an address",
-  googleApiKey,
+  placeholder = "Search for an address"
 }) => {
   const { theme } = useTheme();
   const styles = useGoogleAddressSearchableStyles(theme);
   
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [searchResults, setSearchResults] = useState<GooglePlaceResult[]>([]);
+  const [searchResults, setSearchResults] = useState<AddressSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [hasError, setHasError] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const searchAddresses = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -62,23 +83,15 @@ const GoogleAddressSearchable: React.FC<GoogleAddressSearchableProps> = ({
     setHasError(false);
     
     try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
-          query
-        )}&key=${googleApiKey}&types=address`
-      );
+      console.log('Searching addresses with query:', query);
       
-      const data = await response.json();
+      // Call hybrid search API using apiClient
+      const data: HybridSearchResponse = await apiClient.get('/api/v1/addresses/hybrid_search', {
+        q: query
+      });
       
-      if (data.status === 'OK') {
-        setSearchResults(data.predictions || []);
-      } else if (data.status === 'ZERO_RESULTS') {
-        setSearchResults([]);
-      } else {
-        console.warn('Google Places API error:', data.status);
-        setHasError(true);
-        setSearchResults([]);
-      }
+      console.log('Hybrid search results:', data);
+      setSearchResults(data.suggestions || []);
     } catch (error) {
       console.error('Error searching addresses:', error);
       setHasError(true);
@@ -86,7 +99,7 @@ const GoogleAddressSearchable: React.FC<GoogleAddressSearchableProps> = ({
     } finally {
       setIsSearching(false);
     }
-  }, [googleApiKey]);
+  }, []);
 
   const handleSearchTextChange = useCallback((text: string) => {
     setSearchText(text);
@@ -104,33 +117,42 @@ const GoogleAddressSearchable: React.FC<GoogleAddressSearchableProps> = ({
     setSearchTimeout(newTimeout);
   }, [searchAddresses, searchTimeout]);
 
-  const handleSelectAddress = useCallback(async (place: GooglePlaceResult) => {
-    // Get detailed place information
+  const handleSelectAddress = useCallback(async (suggestion: AddressSuggestion) => {
     try {
-      const detailResponse = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&key=${googleApiKey}&fields=formatted_address`
-      );
-      
-      const detailData = await detailResponse.json();
-      
-      if (detailData.status === 'OK') {
-        const fullAddress = detailData.result.formatted_address;
-        onSelect(fullAddress, place.place_id);
+      if (suggestion.source === 'local') {
+        // Local address - use directly
+        const addressText = suggestion.place_prediction.text.text;
+        onSelect(addressText, suggestion.address_id);
       } else {
-        // Fallback to description if details fail
-        onSelect(place.description, place.place_id);
+        // Google address - save to database first
+        setIsSaving(true);
+        
+        const saveData = await apiClient.post('/api/v1/addresses/save_google_address', {
+          place_id: suggestion.google_place_id,
+          formatted_address: suggestion.place_prediction.text.text
+        });
+        
+        console.log('Address saved:', saveData);
+        
+        // Use the saved address
+        const addressText = saveData.address.full_address || suggestion.place_prediction.text.text;
+        onSelect(addressText, saveData.address.id);
       }
+      
+      setIsModalVisible(false);
+      setSearchText('');
+      setSearchResults([]);
+      setHasError(false);
     } catch (error) {
-      console.error('Error getting place details:', error);
-      // Fallback to description
-      onSelect(place.description, place.place_id);
+      console.error('Error selecting address:', error);
+      setHasError(true);
+      // Still close modal and use the address text as fallback
+      onSelect(suggestion.place_prediction.text.text);
+      setIsModalVisible(false);
+    } finally {
+      setIsSaving(false);
     }
-    
-    setIsModalVisible(false);
-    setSearchText('');
-    setSearchResults([]);
-    setHasError(false);
-  }, [googleApiKey, onSelect]);
+  }, [onSelect]);
 
   const openModal = useCallback(() => {
     setIsModalVisible(true);
@@ -144,6 +166,7 @@ const GoogleAddressSearchable: React.FC<GoogleAddressSearchableProps> = ({
     setSearchResults([]);
     setHasError(false);
     setIsInputFocused(false);
+    setIsSaving(false);
     
     // Clear timeout when closing modal
     if (searchTimeout) {
@@ -221,11 +244,13 @@ const GoogleAddressSearchable: React.FC<GoogleAddressSearchableProps> = ({
   };
 
   const renderSearchResults = () => {
-    if (isSearching) {
+    if (isSearching || isSaving) {
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={theme.colors.primary.main} />
-          <Text style={styles.loadingText}>Searching addresses...</Text>
+          <Text style={styles.loadingText}>
+            {isSaving ? 'Saving address...' : 'Searching addresses...'}
+          </Text>
         </View>
       );
     }
@@ -237,7 +262,7 @@ const GoogleAddressSearchable: React.FC<GoogleAddressSearchableProps> = ({
     return (
       <FlatList
         data={searchResults}
-        keyExtractor={(item) => item.place_id}
+        keyExtractor={(item, index) => `${item.place_prediction.place_id}_${index}`}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -246,18 +271,23 @@ const GoogleAddressSearchable: React.FC<GoogleAddressSearchableProps> = ({
             activeOpacity={0.7}
           >
             <Feather 
-              name="map-pin" 
+              name={item.source === 'local' ? 'home' : 'map-pin'} 
               size={16} 
-              color={theme.colors.text.secondary}
+              color={item.source === 'local' ? theme.colors.primary.main : theme.colors.text.secondary}
               style={styles.resultIcon}
             />
             <View style={styles.resultContent}>
               <Text style={styles.resultMainText}>
-                {item.structured_formatting.main_text}
+                {item.place_prediction.structured_format.main_text.text}
               </Text>
               <Text style={styles.resultSecondaryText}>
-                {item.structured_formatting.secondary_text}
+                {item.place_prediction.structured_format.secondary_text?.text || ''}
               </Text>
+              {item.source === 'local' && (
+                <Text style={[styles.resultSecondaryText, { color: theme.colors.primary.main, fontSize: 12 }]}>
+                  Saved Address
+                </Text>
+              )}
             </View>
           </TouchableOpacity>
         )}
@@ -305,7 +335,7 @@ const GoogleAddressSearchable: React.FC<GoogleAddressSearchableProps> = ({
             </TouchableOpacity>
           )}
           <Feather 
-            name="map-pin" 
+            name="search" 
             size={20} 
             color={theme.colors.text.secondary} 
             style={styles.chevronIcon}
@@ -343,7 +373,7 @@ const GoogleAddressSearchable: React.FC<GoogleAddressSearchableProps> = ({
                 ]}
                 value={searchText}
                 onChangeText={handleSearchTextChange}
-                placeholder="Type to search for addresses..."
+                placeholder="Type to search addresses..."
                 placeholderTextColor={theme.colors.text.tertiary}
                 autoFocus
                 onFocus={() => setIsInputFocused(true)}
