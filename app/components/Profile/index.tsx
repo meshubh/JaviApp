@@ -9,17 +9,17 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
-  Switch,
   Text,
   TouchableOpacity,
   View
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { orderService } from '../../services/OrderService';
+import { ClientProfile, profileService } from '../../services/ProfileService';
 import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
 import Addresses from '../Addresses/index';
-import BankAccounts from '../BankAccounts/index';
+// import BankAccounts from '../BankAccounts/index';
 import { CustomHeader } from '../CustomHeader';
 import PersonalInformation from '../PersonalInformation/index';
 import { useProfileStyles } from './profile.styles';
@@ -34,8 +34,7 @@ interface ProfileOption {
   title: string;
   subtitle?: string;
   value?: string;
-  action?: 'navigate' | 'toggle' | 'logout' | 'modal';
-  hasToggle?: boolean;
+  action?: 'navigate' | 'logout' | 'modal';
   isDanger?: boolean;
   modalComponent?: 'personal' | 'addresses' | 'bankAccounts';
 }
@@ -48,14 +47,14 @@ interface OrderStats {
 
 const Profile: React.FC<ProfileProps> = ({ navigation }) => {
   const { user, logout } = useAuth();
-  const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
   const [orderStats, setOrderStats] = useState<OrderStats>({
     total_orders: 0,
     active_orders: 0,
     delivered_orders: 0,
   });
+  const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState<'personal' | 'addresses' | 'bankAccounts' | null>(null);
 
@@ -64,6 +63,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
 
   useEffect(() => {
     fetchOrderStats();
+    fetchProfile();
   }, []);
 
   const fetchOrderStats = async () => {
@@ -79,6 +79,18 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
       console.error('Failed to fetch order stats:', error);
     } finally {
       setLoadingStats(false);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      setLoadingProfile(true);
+      const data = await profileService.getClientProfile();
+      setProfile(data);
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+    } finally {
+      setLoadingProfile(false);
     }
   };
 
@@ -99,10 +111,11 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
     );
   };
 
-  const handleEditProfile = () => {
-    setModalContent('personal');
-    setModalVisible(true);
-  };
+  // Commented out edit profile functionality
+  // const handleEditProfile = () => {
+  //   setModalContent('personal');
+  //   setModalVisible(true);
+  // };
 
   const handleModalOpen = (component: 'personal' | 'addresses' | 'bankAccounts') => {
     setModalContent(component);
@@ -117,7 +130,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
           icon: 'person',
           iconFamily: 'material',
           title: 'Personal Information',
-          subtitle: 'Name, email, phone, GST',
+          subtitle: 'View your profile details',
           action: 'modal',
           modalComponent: 'personal',
         },
@@ -129,42 +142,44 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
           action: 'modal',
           modalComponent: 'addresses',
         },
-        {
-          icon: 'account-balance',
-          iconFamily: 'material',
-          title: 'Bank Accounts',
-          subtitle: 'Manage bank accounts',
-          action: 'modal',
-          modalComponent: 'bankAccounts',
-        },
+        // Commented out bank accounts functionality
+        // {
+        //   icon: 'account-balance',
+        //   iconFamily: 'material',
+        //   title: 'Bank Accounts',
+        //   subtitle: 'Manage bank accounts',
+        //   action: 'modal',
+        //   modalComponent: 'bankAccounts',
+        // },
       ],
     },
-    {
-      title: 'Preferences',
-      options: [
-        {
-          icon: 'notifications',
-          iconFamily: 'material',
-          title: 'Push Notifications',
-          hasToggle: true,
-          action: 'toggle',
-        },
-        {
-          icon: 'moon',
-          iconFamily: 'ionicons',
-          title: 'Dark Mode',
-          hasToggle: true,
-          action: 'toggle',
-        },
-        {
-          icon: 'language',
-          iconFamily: 'material',
-          title: 'Language',
-          value: 'English',
-          action: 'navigate',
-        },
-      ],
-    },
+    // Commented out preferences section
+    // {
+    //   title: 'Preferences',
+    //   options: [
+    //     {
+    //       icon: 'notifications',
+    //       iconFamily: 'material',
+    //       title: 'Push Notifications',
+    //       hasToggle: true,
+    //       action: 'toggle',
+    //     },
+    //     {
+    //       icon: 'moon',
+    //       iconFamily: 'ionicons',
+    //       title: 'Dark Mode',
+    //       hasToggle: true,
+    //       action: 'toggle',
+    //     },
+    //     {
+    //       icon: 'language',
+    //       iconFamily: 'material',
+    //       title: 'Language',
+    //       value: 'English',
+    //       action: 'navigate',
+    //     },
+    //   ],
+    // },
     {
       title: 'Support',
       options: [
@@ -249,8 +264,8 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
         return <PersonalInformation />;
       case 'addresses':
         return <Addresses />;
-      case 'bankAccounts':
-        return <BankAccounts />;
+      // case 'bankAccounts':
+      //   return <BankAccounts />;
       default:
         return null;
     }
@@ -262,8 +277,8 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
         return 'Personal Information';
       case 'addresses':
         return 'Addresses';
-      case 'bankAccounts':
-        return 'Bank Accounts';
+      // case 'bankAccounts':
+      //   return 'Bank Accounts';
       default:
         return '';
     }
@@ -299,10 +314,11 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
             <Text style={styles.userName}>{user?.name || 'User Name'}</Text>
             <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
             
-            <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+            {/* Commented out edit profile button */}
+            {/* <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
               <Feather name="edit-2" size={16} color={theme.colors.primary.main} />
               <Text style={styles.editButtonText}>Edit Profile</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* Stats Row */}
             <View style={styles.statsRow}>
@@ -327,6 +343,28 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
                 </>
               )}
             </View>
+
+            {/* Account Statistics from Profile */}
+            {!loadingProfile && profile && (
+              <View style={styles.additionalStatsRow}>
+                <View style={styles.statItem}>
+                  <MaterialIcons name="payments" size={20} color={theme.colors.semantic.success} />
+                  <Text style={styles.statNumber}>₹{profile.total_revenue || 0}</Text>
+                  <Text style={styles.statLabel}>Total Spent</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <MaterialIcons name="calendar-today" size={20} color={theme.colors.primary.main} />
+                  <Text style={styles.statNumber}>
+                    {new Date(profile.onboarding_date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </Text>
+                  <Text style={styles.statLabel}>Member Since</Text>
+                </View>
+              </View>
+            )}
           </View>
 
           {/* Profile Options */}
@@ -342,7 +380,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
                       optionIndex === section.options.length - 1 && styles.lastOption,
                     ]}
                     onPress={() => handleOptionPress(option)}
-                    activeOpacity={option.hasToggle ? 1 : 0.7}
+                    activeOpacity={0.7}
                   >
                     <View style={styles.optionLeft}>
                       <View style={[
@@ -364,27 +402,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
                       </View>
                     </View>
                     <View style={styles.optionRight}>
-                      {option.hasToggle ? (
-                        <Switch
-                          value={option.title === 'Push Notifications' ? notifications : darkMode}
-                          onValueChange={(value) => {
-                            if (option.title === 'Push Notifications') {
-                              setNotifications(value);
-                            } else if (option.title === 'Dark Mode') {
-                              setDarkMode(value);
-                            }
-                          }}
-                          trackColor={{ 
-                            false: theme.colors.border.primary, 
-                            true: theme.colors.primary.main + '50' 
-                          }}
-                          thumbColor={
-                            (option.title === 'Push Notifications' ? notifications : darkMode)
-                              ? theme.colors.primary.main
-                              : theme.colors.background.primary
-                          }
-                        />
-                      ) : option.value ? (
+                      {option.value ? (
                         <Text style={styles.optionValue}>{option.value}</Text>
                       ) : !option.isDanger ? (
                         <Feather name="chevron-right" size={20} color={theme.colors.text.tertiary} />

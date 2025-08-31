@@ -73,29 +73,40 @@ export const useProfileStyles = createStyles((theme) => ({
   },
   userEmail: {
     fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text. secondary,
+    color: theme.colors.text.secondary,
     marginBottom: theme.spacing.lg,
   },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.primary.main,
-    marginBottom: theme.spacing.xl,
-  },
-  editButtonText: {
-    marginLeft: theme.spacing.xs,
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.primary.main,
-  },
+  // Commented out edit button styles
+  // editButton: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   paddingHorizontal: theme.spacing.lg,
+  //   paddingVertical: theme.spacing.sm,
+  //   borderRadius: theme.borderRadius.md,
+  //   borderWidth: 1,
+  //   borderColor: theme.colors.primary.main,
+  //   marginBottom: theme.spacing.xl,
+  // },
+  // editButtonText: {
+  //   marginLeft: theme.spacing.xs,
+  //   fontSize: theme.typography.fontSize.sm,
+  //   fontWeight: theme.typography.fontWeight.medium,
+  //   color: theme.colors.primary.main,
+  // },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.md,
+  },
+  additionalStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border.secondary,
   },
   statItem: {
     flex: 1,
@@ -106,10 +117,11 @@ export const useProfileStyles = createStyles((theme) => ({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
   },
   statLabel: {
     fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text. secondary,
+    color: theme.colors.text.secondary,
   },
   statDivider: {
     width: 1,
@@ -122,7 +134,7 @@ export const useProfileStyles = createStyles((theme) => ({
   sectionTitle: {
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semiBold,
-    color: theme.colors.text. secondary,
+    color: theme.colors.text.secondary,
     paddingHorizontal: theme.spacing.xl,
     paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.background.secondary,
@@ -180,7 +192,7 @@ export const useProfileStyles = createStyles((theme) => ({
   },
   optionValue: {
     fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text. secondary,
+    color: theme.colors.text.secondary,
     marginRight: theme.spacing.xs,
   },
   versionContainer: {

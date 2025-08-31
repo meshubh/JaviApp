@@ -124,13 +124,13 @@ const PersonalInformation: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Personal Information</Text>
-        {!isEditing ? (
+        {/* {!isEditing ? (
           <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editButton}>
             <Feather name="edit-2" size={20} color={theme.colors.primary.main} />
           </TouchableOpacity>
         ) : (
           <View style={{ width: 32 }} />
-        )}
+        )} */}
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -250,7 +250,7 @@ const PersonalInformation: React.FC = () => {
               />
             </View>
 
-            <View style={styles.formGroup}>
+            {/* <View style={styles.formGroup}>
               <Text style={styles.inputLabel}>Company Size</Text>
               <TextInput
                 style={[styles.input, !isEditing && styles.inputDisabled]}
@@ -260,12 +260,12 @@ const PersonalInformation: React.FC = () => {
                 placeholderTextColor={theme.colors.text.tertiary}
                 editable={isEditing}
               />
-            </View>
+            </View> */}
           </View>
         </View>
 
         {/* Account Statistics */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account Statistics</Text>
           
           <View style={styles.statsGrid}>
@@ -293,7 +293,7 @@ const PersonalInformation: React.FC = () => {
               </Text>
             </View>
           </View>
-        </View>
+        </View> */}
 
         {/* Action Buttons */}
         {isEditing && (
