@@ -229,19 +229,20 @@ class AuthService {
     }
   }
 
-  async changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
-    try {
-      const response = await apiClient.post('/api/v1/clients/change-password', {
-        current_password: currentPassword,
-        new_password: newPassword
-      });
-
-      return response.status === 200;
-    } catch (error) {
-      console.error('Password change error:', error);
-      return false;
-    }
+  async changePassword(currentPassword: string, newPassword: string, confirmPassword?: string): Promise<any> {
+  try {
+    const response = await apiClient.post('/api/v1/clients/change_password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword || newPassword
+    });
+    
+    return response;
+  } catch (error) {
+    console.error('Change password error:', error);
+    throw error;
   }
+}
 
   // New method to mark password change as completed
   async markPasswordChangeComplete(): Promise<void> {

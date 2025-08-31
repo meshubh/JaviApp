@@ -1,5 +1,4 @@
 // PasswordChangeDialog.tsx
-import { authService } from '@/app/services/AuthService';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,6 +12,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { authService } from '../../services/AuthService';
 import { useTheme } from '../../theme/themeContext';
 import { passwordChangeStyles } from './passwordChange.styles';
 
@@ -22,18 +22,18 @@ interface PasswordChangeDialogProps {
   onCancel: () => void;
 }
 
-export const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
+const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
   visible,
   onSuccess,
   onCancel
 }) => {
+  const { theme } = useTheme();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
-
-  const { theme } = useTheme();
+ 
   const styles = passwordChangeStyles(theme);
 
   const validateForm = (): boolean => {
@@ -60,7 +60,7 @@ export const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
     }
 
     // Check if new password is different from current
-    if (currentPassword && newPassword && currentPassword.toUpperCase() === newPassword.toUpperCase()) {
+    if (currentPassword && newPassword && currentPassword === newPassword) {
       newErrors.newPassword = 'New password must be different from current password';
     }
 
@@ -76,7 +76,7 @@ export const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
     setLoading(true);
     
     try {
-      const response = await authService.changePassword(currentPassword, newPassword);
+      const response = await authService.changePassword(currentPassword, newPassword, confirmPassword);
 
       console.log('Password change successful:', response);
 
@@ -154,13 +154,18 @@ export const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Current Password</Text>
                 <TextInput
-                  style={[styles.input, errors.currentPassword && styles.inputError]}
+                  style={[
+                    styles.input, 
+                    errors.currentPassword && styles.inputError
+                  ]}
                   value={currentPassword}
                   onChangeText={setCurrentPassword}
                   secureTextEntry
                   placeholder="Enter your current password"
+                  placeholderTextColor={theme.colors.text.tertiary}
                   autoCapitalize="none"
                   editable={!loading}
+                  accessibilityLabel="Current password input"
                 />
                 {errors.currentPassword && (
                   <Text style={styles.errorText}>{errors.currentPassword}</Text>
@@ -171,13 +176,18 @@ export const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>New Password</Text>
                 <TextInput
-                  style={[styles.input, errors.newPassword && styles.inputError]}
+                  style={[
+                    styles.input, 
+                    errors.newPassword && styles.inputError
+                  ]}
                   value={newPassword}
                   onChangeText={setNewPassword}
                   secureTextEntry
                   placeholder="Enter new password (min 8 characters)"
+                  placeholderTextColor={theme.colors.text.tertiary}
                   autoCapitalize="none"
                   editable={!loading}
+                  accessibilityLabel="New password input"
                 />
                 {errors.newPassword && (
                   <Text style={styles.errorText}>{errors.newPassword}</Text>
@@ -188,13 +198,18 @@ export const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Confirm New Password</Text>
                 <TextInput
-                  style={[styles.input, errors.confirmPassword && styles.inputError]}
+                  style={[
+                    styles.input, 
+                    errors.confirmPassword && styles.inputError
+                  ]}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry
                   placeholder="Confirm your new password"
+                  placeholderTextColor={theme.colors.text.tertiary}
                   autoCapitalize="none"
                   editable={!loading}
+                  accessibilityLabel="Confirm password input"
                 />
                 {errors.confirmPassword && (
                   <Text style={styles.errorText}>{errors.confirmPassword}</Text>
@@ -204,20 +219,35 @@ export const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
               {/* Buttons */}
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
-                  style={[styles.button, styles.cancelButton]}
+                  style={[
+                    styles.button, 
+                    styles.cancelButton,
+                    loading && styles.disabledButton
+                  ]}
                   onPress={handleCancel}
                   disabled={loading}
+                  accessibilityLabel="Cancel password change"
+                  accessibilityRole="button"
                 >
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.button, styles.changeButton]}
+                  style={[
+                    styles.button, 
+                    styles.changeButton,
+                    loading && styles.disabledButton
+                  ]}
                   onPress={handlePasswordChange}
                   disabled={loading}
+                  accessibilityLabel="Change password"
+                  accessibilityRole="button"
                 >
                   {loading ? (
-                    <ActivityIndicator color="#fff" size="small" />
+                    <ActivityIndicator 
+                      color={theme.colors.primary.contrast} 
+                      size="small" 
+                    />
                   ) : (
                     <Text style={styles.changeButtonText}>Change Password</Text>
                   )}

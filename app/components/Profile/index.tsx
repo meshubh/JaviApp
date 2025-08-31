@@ -21,6 +21,7 @@ import { RootStackParamList } from '../../types/navigation';
 import Addresses from '../Addresses/index';
 // import BankAccounts from '../BankAccounts/index';
 import { CustomHeader } from '../CustomHeader';
+import PasswordChangeDialog from '../PasswordChangeDialog/index';
 import PersonalInformation from '../PersonalInformation/index';
 import { useProfileStyles } from './profile.styles';
 
@@ -34,7 +35,7 @@ interface ProfileOption {
   title: string;
   subtitle?: string;
   value?: string;
-  action?: 'navigate' | 'logout' | 'modal';
+  action?: 'navigate' | 'logout' | 'modal' | 'password';
   isDanger?: boolean;
   modalComponent?: 'personal' | 'addresses' | 'bankAccounts';
 }
@@ -57,6 +58,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState<'personal' | 'addresses' | 'bankAccounts' | null>(null);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   const { theme } = useTheme();
   const styles = useProfileStyles(theme);
@@ -141,6 +143,13 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
           subtitle: 'Manage delivery addresses',
           action: 'modal',
           modalComponent: 'addresses',
+        },
+        {
+          icon: 'lock',
+          iconFamily: 'material',
+          title: 'Change Password',
+          subtitle: 'Update your account password',
+          action: 'password',
         },
         // Commented out bank accounts functionality
         // {
@@ -249,6 +258,9 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
         if (option.modalComponent) {
           handleModalOpen(option.modalComponent);
         }
+        break;
+      case 'password':
+        setShowPasswordDialog(true);
         break;
       case 'navigate':
         Alert.alert(option.title, `${option.title} feature coming soon!`);
@@ -439,6 +451,16 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
             {renderModalContent()}
           </SafeAreaView>
         </Modal>
+
+        {/* Password Change Dialog */}
+        <PasswordChangeDialog
+          visible={showPasswordDialog}
+          onSuccess={() => {
+            setShowPasswordDialog(false);
+            Alert.alert('Success', 'Password changed successfully!');
+          }}
+          onCancel={() => setShowPasswordDialog(false)}
+        />
       </SafeAreaView>
     </>
   );

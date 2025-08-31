@@ -11,8 +11,17 @@ export const passwordChangeStyles = createStyles((theme) => ({
       padding: theme.spacing.xl,
     },
     modalContent: {
-      ...theme.overlay.modal,
+      backgroundColor: theme.overlay.modal.backgroundColor,
+      borderRadius: theme.overlay.modal.borderRadius,
+      padding: 24,
       maxHeight: '80%',
+      // Flatten the elevation object manually
+      elevation: theme.overlay.modal.elevation.elevation,
+      shadowColor: theme.overlay.modal.elevation.shadowColor,
+      shadowOffsetWidth: theme.overlay.modal.elevation.shadowOffset.width,
+      shadowOffsetHeight: theme.overlay.modal.elevation.shadowOffset.height,
+      shadowOpacity: theme.overlay.modal.elevation.shadowOpacity,
+      shadowRadius: theme.overlay.modal.elevation.shadowRadius,
     },
     title: {
       ...theme.typography.styles.h2,
