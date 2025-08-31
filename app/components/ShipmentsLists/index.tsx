@@ -42,7 +42,7 @@ interface ShipmentsListProps {
 
 const ShipmentsList: React.FC<ShipmentsListProps> = ({ shipments }) => {
   const { theme } = useTheme();
-  const styles = shipmentListsStyles(theme);
+  const styles = useMemo(() => shipmentListsStyles(theme), [theme]);
   
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,13 +82,13 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({ shipments }) => {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      'Created': theme.colors.neutral[500],
-      'Picked': theme.colors.primary.main,
+      'Created': theme.colors.neutral?.[500] || '#6B7280',
+      'Picked': theme.colors.primary?.main || '#3B82F6',
       'In Transit': '#F59E0B',
-      'Delivered': theme.colors.semantic.success,
-      'Cancelled': theme.colors.semantic.error,
+      'Delivered': theme.colors.semantic?.success || '#10B981',
+      'Cancelled': theme.colors.semantic?.error || '#EF4444',
     };
-    return colors[status] || theme.colors.neutral[500];
+    return colors[status] || theme.colors.neutral?.[500] || '#6B7280';
   };
 
   const getStatusIcon = (status: string) => {
@@ -99,17 +99,21 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({ shipments }) => {
       'Delivered': 'check-circle',
       'Cancelled': 'x-circle',
     };
-    return icons[status] ?? 'info';
+    return icons[status] || 'info';
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined | null): string => {
     if (!dateString) return 'Not set';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch (e) {
+      return 'Invalid date';
+    }
   };
 
   const toggleExpanded = () => {
@@ -186,13 +190,13 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({ shipments }) => {
                 {item.shipment_number}
               </Text>
               <View style={styles.shipmentMeta}>
-                <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
+                <View style={[styles.statusBadge, { backgroundColor: `${statusColor}20` }]}>
                   <Feather name={statusIcon as any} size={12} color={statusColor} />
                   <Text style={[styles.statusText, { color: statusColor }]}>
                     {item.status}
                   </Text>
                 </View>
-                {item.weight && (
+                {item.weight != null && (
                   <Text style={[styles.weightText, { color: theme.colors.text.secondary }]}>
                     {item.weight} kg
                   </Text>
@@ -208,148 +212,154 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({ shipments }) => {
         </TouchableOpacity>
 
         {/* Expanded Details */}
-        {isItemExpanded && (
+        {isItemExpanded ? (
           <View style={styles.shipmentDetails}>
             {/* Details Grid */}
             <View style={styles.detailsGrid}>
-              {item.tracking_number && (
+              {item.tracking_number ? (
                 <View style={styles.detailItem}>
-                  <Text style={[styles.detailLabel, { color: theme.colors.text.secondary }]}>
-                    Tracking #
+                  <Text style={[styles.detailLabel, { color: theme.colors.text?.secondary || '#6B7280' }]}>
+                    {'Tracking #'}
                   </Text>
-                  <Text style={[styles.detailValue, { color: theme.colors.text.primary }]}>
-                    {item.tracking_number}
+                  <Text style={[styles.detailValue, { color: theme.colors.text?.primary || '#111827' }]}>
+                    {String(item.tracking_number)}
                   </Text>
                 </View>
-              )}
+              ) : null}
 
-              {item.dimensions && (
+              {item.dimensions && item.dimensions.length && item.dimensions.width && item.dimensions.height ? (
                 <View style={styles.detailItem}>
-                  <Text style={[styles.detailLabel, { color: theme.colors.text.secondary }]}>
-                    Dimensions
+                  <Text style={[styles.detailLabel, { color: theme.colors.text?.secondary || '#6B7280' }]}>
+                    {'Dimensions'}
                   </Text>
-                  <Text style={[styles.detailValue, { color: theme.colors.text.primary }]}>
-                    {item.dimensions.length}×{item.dimensions.width}×{item.dimensions.height} cm
+                  <Text style={[styles.detailValue, { color: theme.colors.text?.primary || '#111827' }]}>
+                    {String(item.dimensions.length) + ' x ' + String(item.dimensions.width) + ' x ' + String(item.dimensions.height) + ' cm'}
                   </Text>
                 </View>
-              )}
+              ) : null}
 
-              {item && item.number_of_boxes && item.number_of_boxes > 0 && (
+              {item.number_of_boxes && item.number_of_boxes > 0 ? (
                 <View style={styles.detailItem}>
-                  <Text style={[styles.detailLabel, { color: theme.colors.text.secondary }]}>
-                    Boxes
+                  <Text style={[styles.detailLabel, { color: theme.colors.text?.secondary || '#6B7280' }]}>
+                    {'Boxes'}
                   </Text>
-                  <Text style={[styles.detailValue, { color: theme.colors.text.primary }]}>
-                    {item.number_of_boxes}
+                  <Text style={[styles.detailValue, { color: theme.colors.text?.primary || '#111827' }]}>
+                    {String(item.number_of_boxes)}
                   </Text>
                 </View>
-              )}
+              ) : null}
 
-              {item && item.number_of_invoices && item.number_of_invoices > 0 && (
+              {item.number_of_invoices && item.number_of_invoices > 0 ? (
                 <View style={styles.detailItem}>
-                  <Text style={[styles.detailLabel, { color: theme.colors.text.secondary }]}>
-                    Invoices
+                  <Text style={[styles.detailLabel, { color: theme.colors.text?.secondary || '#6B7280' }]}>
+                    {'Invoices'}
                   </Text>
-                  <Text style={[styles.detailValue, { color: theme.colors.text.primary }]}>
-                    {item.number_of_invoices}
+                  <Text style={[styles.detailValue, { color: theme.colors.text?.primary || '#111827' }]}>
+                    {String(item.number_of_invoices)}
                   </Text>
                 </View>
-              )}
+              ) : null}
 
               <View style={styles.detailItem}>
-                <Text style={[styles.detailLabel, { color: theme.colors.text.secondary }]}>
-                  Created
+                <Text style={[styles.detailLabel, { color: theme.colors.text?.secondary || '#6B7280' }]}>
+                  {'Created'}
                 </Text>
-                <Text style={[styles.detailValue, { color: theme.colors.text.primary }]}>
+                <Text style={[styles.detailValue, { color: theme.colors.text?.primary || '#111827' }]}>
                   {formatDate(item.created_at)}
                 </Text>
               </View>
 
-              {item.pickup_completed_at && (
+              {item.pickup_completed_at ? (
                 <View style={styles.detailItem}>
-                  <Text style={[styles.detailLabel, { color: theme.colors.text.secondary }]}>
-                    Picked Up
+                  <Text style={[styles.detailLabel, { color: theme.colors.text?.secondary || '#6B7280' }]}>
+                    {'Picked Up'}
                   </Text>
-                  <Text style={[styles.detailValue, { color: theme.colors.text.primary }]}>
+                  <Text style={[styles.detailValue, { color: theme.colors.text?.primary || '#111827' }]}>
                     {formatDate(item.pickup_completed_at)}
                   </Text>
                 </View>
-              )}
+              ) : null}
 
-              {item.delivery_completed_at && (
+              {item.delivery_completed_at ? (
                 <View style={styles.detailItem}>
-                  <Text style={[styles.detailLabel, { color: theme.colors.text.secondary }]}>
-                    Delivered
+                  <Text style={[styles.detailLabel, { color: theme.colors.text?.secondary || '#6B7280' }]}>
+                    {'Delivered'}
                   </Text>
-                  <Text style={[styles.detailValue, { color: theme.colors.text.primary }]}>
+                  <Text style={[styles.detailValue, { color: theme.colors.text?.primary || '#111827' }]}>
                     {formatDate(item.delivery_completed_at)}
                   </Text>
                 </View>
-              )}
+              ) : null}
 
-              {item.declared_value && (
+              {item.declared_value !== undefined && item.declared_value !== null ? (
                 <View style={styles.detailItem}>
-                  <Text style={[styles.detailLabel, { color: theme.colors.text.secondary }]}>
-                    Value
+                  <Text style={[styles.detailLabel, { color: theme.colors.text?.secondary || '#6B7280' }]}>
+                    {'Value'}
                   </Text>
-                  <Text style={[styles.detailValue, { color: theme.colors.text.primary }]}>
-                    ₹{item.declared_value}
+                  <Text style={[styles.detailValue, { color: theme.colors.text?.primary || '#111827' }]}>
+                    {'INR ' + String(item.declared_value)}
                   </Text>
                 </View>
-              )}
+              ) : null}
             </View>
 
             {/* Description */}
-            {item.description && (
+            {item.description ? (
               <View style={styles.descriptionContainer}>
-                <Text style={[styles.detailLabel, { color: theme.colors.text.secondary }]}>
-                  Description
+                <Text style={[styles.detailLabel, { color: theme.colors.text?.secondary || '#6B7280' }]}>
+                  {'Description'}
                 </Text>
-                <Text style={[styles.descriptionText, { color: theme.colors.text.primary }]}>
-                  {item.description}
+                <Text style={[styles.descriptionText, { color: theme.colors.text?.primary || '#111827' }]}>
+                  {String(item.description)}
                 </Text>
               </View>
-            )}
+            ) : null}
 
             {/* Special Handling & Flags */}
-            <View style={styles.flagsContainer}>
-              {item.is_fragile && (
-                <View style={[styles.flag, { backgroundColor: '#FEF3C7' }]}>
-                  <MaterialIcons name="warning" size={14} color="#D97706" />
-                  <Text style={[styles.flagText, { color: '#D97706' }]}>Fragile</Text>
-                </View>
-              )}
-              {item.requires_signature && (
-                <View style={[styles.flag, { backgroundColor: '#DBEAFE' }]}>
-                  <MaterialIcons name="edit" size={14} color="#2563EB" />
-                  <Text style={[styles.flagText, { color: '#2563EB' }]}>Signature Required</Text>
-                </View>
-              )}
-              {item.special_handling && item.special_handling.map((tag, index) => (
-                <View
-                  key={index}
-                  style={[styles.flag, { backgroundColor: theme.colors.primary.light + '30' }]}
-                >
-                  <Text style={[styles.flagText, { color: theme.colors.primary.main }]}>
-                    {tag}
-                  </Text>
-                </View>
-              ))}
-            </View>
+            {(item.is_fragile || item.requires_signature || (item.special_handling && item.special_handling.length > 0)) ? (
+              <View style={styles.flagsContainer}>
+                {item.is_fragile ? (
+                  <View style={[styles.flag, { backgroundColor: '#FEF3C7' }]}>
+                    <MaterialIcons name="warning" size={14} color="#D97706" />
+                    <Text style={[styles.flagText, { color: '#D97706' }]}>
+                      {'Fragile'}
+                    </Text>
+                  </View>
+                ) : null}
+                {item.requires_signature ? (
+                  <View style={[styles.flag, { backgroundColor: '#DBEAFE' }]}>
+                    <MaterialIcons name="edit" size={14} color="#2563EB" />
+                    <Text style={[styles.flagText, { color: '#2563EB' }]}>
+                      {'Signature Required'}
+                    </Text>
+                  </View>
+                ) : null}
+                {item.special_handling ? item.special_handling.map((tag, index) => (
+                  <View
+                    key={index}
+                    style={[styles.flag, { backgroundColor: '#E5E7EB' }]}
+                  >
+                    <Text style={[styles.flagText, { color: theme.colors.primary?.main || '#3B82F6' }]}>
+                      {String(tag)}
+                    </Text>
+                  </View>
+                )) : null}
+              </View>
+            ) : null}
 
             {/* Notes */}
-            {item.notes && (
+            {item.notes ? (
               <View style={styles.notesContainer}>
-                <Text style={[styles.detailLabel, { color: theme.colors.text.secondary }]}>
-                  Notes
+                <Text style={[styles.detailLabel, { color: theme.colors.text?.secondary || '#6B7280' }]}>
+                  {'Notes'}
                 </Text>
-                <Text style={[styles.notesText, { color: theme.colors.text.primary }]}>
-                  {item.notes}
+                <Text style={[styles.notesText, { color: theme.colors.text?.primary || '#111827' }]}>
+                  {String(item.notes)}
                 </Text>
               </View>
-            )}
+            ) : null}
           </View>
-        )}
+        ) : null}
       </View>
     );
   };
