@@ -92,10 +92,10 @@ export const STORAGE_KEYS = {
 // API Endpoints
 export const API_ENDPOINTS = {
   // Auth
-  LOGIN: '/api/auth/login/',
-  LOGOUT: '/api/auth/logout/',
-  REFRESH: '/api/auth/refresh/',
-  VALIDATE_TOKEN: '/api/auth/validate/',
+  LOGIN: ' /api/v1/clients/login',
+  LOGOUT: ' /api/v1/clients/logout',
+  REFRESH: '/api/auth/refresh',
+  VALIDATE_TOKEN: '/api/auth/validate',
   
   // Orders
   ORDERS: '/api/orders/',

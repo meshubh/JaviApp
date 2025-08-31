@@ -40,7 +40,7 @@ export const useLoginStyles = createStyles((theme) => ({
   },
   subtitle: {
     fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text. secondary,
+    color: theme.colors.text.secondary,
     textAlign: 'center',
   },
   formSection: {
@@ -70,6 +70,17 @@ export const useLoginStyles = createStyles((theme) => ({
   },
   eyeIcon: {
     padding: theme.spacing.xs,
+  },
+  // New styles for "Sign in with another account"
+  signInAnotherLink: {
+    marginTop: theme.spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  signInAnotherText: {
+    color: theme.colors.secondary.main,
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.medium,
+    textDecorationLine: 'underline',
   },
   forgotPassword: {
     alignSelf: 'flex-end',
@@ -109,7 +120,7 @@ export const useLoginStyles = createStyles((theme) => ({
   },
   dividerText: {
     marginHorizontal: theme.spacing.md,
-    color: theme.colors.text. secondary,
+    color: theme.colors.text.secondary,
     fontSize: theme.typography.fontSize.sm,
   },
   signUpContainer: {
@@ -119,7 +130,7 @@ export const useLoginStyles = createStyles((theme) => ({
     marginTop: theme.spacing.md,
   },
   signUpText: {
-    color: theme.colors.text. secondary,
+    color: theme.colors.text.secondary,
     fontSize: theme.typography.fontSize.md,
   },
   signUpLink: {

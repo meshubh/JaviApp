@@ -18,6 +18,14 @@ const API_BASE_URL = ENV[currentEnv].API_URL;
 
 console.log(`API Base URL: ${API_BASE_URL}`);
 
+// Storage keys
+const STORAGE_KEYS = {
+  AUTH_TOKEN: 'authToken',
+  REFRESH_TOKEN: 'refreshToken',
+  TOKEN_EXPIRES_AT: 'token_expires_at',
+  USER_DATA: 'userData',
+};
+
 // Create axios instance
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -51,7 +59,7 @@ const processQueue = (error: any, token: string | null = null) => {
 // Request interceptor - Add auth token to requests
 axiosInstance.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('authToken');
+    const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -117,7 +125,7 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = await AsyncStorage.getItem('refreshToken');
+        const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
         
         if (!refreshToken) {
           throw new Error('No refresh token available');
@@ -129,10 +137,15 @@ axiosInstance.interceptors.response.use(
 
         const { access, refresh } = response.data;
         
-        await AsyncStorage.setItem('authToken', access);
-        if (refresh) {
-          await AsyncStorage.setItem('refreshToken', refresh);
-        }
+        // Store tokens with expiry
+        const TOKEN_DURATION = 12 * 60 * 60 * 1000; // 12 hours
+        const expiresAt = Date.now() + TOKEN_DURATION;
+        
+        await Promise.all([
+          AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, access),
+          AsyncStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRES_AT, expiresAt.toString()),
+          refresh ? AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh) : Promise.resolve(),
+        ]);
         
         // Update the authorization header for the original request
         if (originalRequest.headers) {
@@ -147,7 +160,12 @@ axiosInstance.interceptors.response.use(
         processQueue(refreshError, null);
         
         // Clear auth data and redirect to login
-        await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userData']);
+        await AsyncStorage.multiRemove([
+          STORAGE_KEYS.AUTH_TOKEN, 
+          STORAGE_KEYS.REFRESH_TOKEN, 
+          STORAGE_KEYS.TOKEN_EXPIRES_AT,
+          STORAGE_KEYS.USER_DATA
+        ]);
         
         // You might want to trigger navigation to login here
         // navigationRef.current?.navigate('Login');
@@ -254,12 +272,12 @@ export const apiClient = {
   // Get user data from storage or token
   getUserData: async (): Promise<any> => {
     try {
-      const userDataStr = await AsyncStorage.getItem('userData');
+      const userDataStr = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
       if (userDataStr) {
         return JSON.parse(userDataStr);
       }
       
-      const token = await AsyncStorage.getItem('authToken');
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
       if (token) {
         // Basic JWT decode (without verification)
         const payload = token.split('.')[1];
@@ -289,6 +307,20 @@ export const apiClient = {
 
   // Get current API URL
   getApiUrl: () => API_BASE_URL,
+  
+  // Check token expiry
+  isTokenExpired: async (): Promise<boolean> => {
+    try {
+      const expiresAtStr = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRES_AT);
+      if (!expiresAtStr) return true;
+      
+      const expiresAt = parseInt(expiresAtStr);
+      return Date.now() >= expiresAt;
+    } catch (error) {
+      console.error('Error checking token expiry:', error);
+      return true;
+    }
+  },
 };
 
 // Export types
