@@ -75,21 +75,52 @@ export const useAddressesStyles = createStyles((theme) => ({
     color: theme.colors.text.primary,
   },
 
+  // Contact Information Styles (NEW)
+  contactSection: {
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border.secondary,
+  },
+  
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: theme.spacing.xs,
+  },
+  
+  contactName: {
+    marginLeft: theme.spacing.sm,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text.primary,
+  },
+  
+  contactNumber: {
+    marginLeft: theme.spacing.sm,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.primary.main,
+    textDecorationLine: 'underline',
+  },
+
   primaryBadge: {
-      backgroundColor: theme.colors.primary.light + '20',
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.xs,
-      borderRadius: theme.borderRadius.lg,
-      borderWidth: 1,
-      borderColor: theme.colors.primary.light,
-    },
-    primaryText: {
-      fontSize: theme.typography.fontSize.xs,
-      fontWeight: theme.typography.fontWeight.semiBold,
-      color: theme.colors.primary.main,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
+    backgroundColor: theme.colors.primary.light + '20',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.primary.light,
+  },
+  
+  primaryText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.semiBold,
+    color: theme.colors.primary.main,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   
   activeBadge: {
     backgroundColor: theme.colors.semantic.success + '20',
@@ -146,6 +177,7 @@ export const useAddressesStyles = createStyles((theme) => ({
     borderColor: theme.colors.primary.main,
     backgroundColor: 'transparent',
   },
+  
   setPrimaryText: {
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.medium,
@@ -167,6 +199,7 @@ export const useAddressesStyles = createStyles((theme) => ({
     fontSize: theme.typography.fontSize.lg,
     color: theme.colors.text.secondary,
   },
+  
   emptySubtext: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.tertiary,
@@ -185,7 +218,7 @@ export const useAddressesStyles = createStyles((theme) => ({
     backgroundColor: theme.colors.background.primary,
     borderTopLeftRadius: theme.borderRadius.xl,
     borderTopRightRadius: theme.borderRadius.xl,
-    maxHeight: '80%',
+    maxHeight: '90%',
     paddingBottom: theme.spacing.xl,
   },
   
@@ -197,7 +230,6 @@ export const useAddressesStyles = createStyles((theme) => ({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border.secondary,
   },
-
   
   modalTitle: {
     fontSize: theme.typography.fontSize.xl,
@@ -208,6 +240,22 @@ export const useAddressesStyles = createStyles((theme) => ({
   formSection: {
     marginBottom: theme.spacing.lg,
     paddingHorizontal: theme.spacing.lg,
+  },
+
+  // Form Section Headers (NEW)
+  formSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
+  },
+  
+  formSectionTitle: {
+    marginLeft: theme.spacing.sm,
+    fontSize: theme.typography.fontSize.md,
+    fontWeight: theme.typography.fontWeight.semiBold,
+    color: theme.colors.primary.main,
   },
 
   loadingText: {
@@ -226,6 +274,7 @@ export const useAddressesStyles = createStyles((theme) => ({
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
     marginBottom: theme.spacing.sm,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   
   input: {
@@ -237,6 +286,19 @@ export const useAddressesStyles = createStyles((theme) => ({
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
+  },
+
+  // Input Error State (NEW)
+  inputError: {
+    borderColor: theme.colors.semantic.error,
+    borderWidth: 1,
+  },
+  
+  errorText: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.semantic.error,
+    marginTop: theme.spacing.xs,
+    marginLeft: theme.spacing.xs,
   },
   
   typeSelector: {

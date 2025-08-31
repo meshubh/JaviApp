@@ -39,6 +39,9 @@ export interface Address {
   address_line_2?: string;
   city: string;
   state: string;
+  name: string;
+  number: string;
+  contact_info?: string;
   postal_code: string;
   country: string;
   landmark?: string;
@@ -139,6 +142,8 @@ export interface UpdateProfileData {
 
 export interface CreateAddressData {
   address_type: 'Pickup' | 'Delivery' | 'Billing' | 'Office' | 'Warehouse' | 'Registered';
+  name: string;
+  number: string;
   address_line_1: string;
   address_line_2?: string;
   city: string;
