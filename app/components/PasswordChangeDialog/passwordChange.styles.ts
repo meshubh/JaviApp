@@ -90,6 +90,7 @@ export const passwordChangeStyles = createStyles((theme) => ({
     changeButtonText: {
       ...theme.typography.styles.button,
       color: theme.colors.primary.contrast,
+      textAlign: 'center' as const,
     },
     disabledButton: {
       opacity: 0.6,
