@@ -35,10 +35,46 @@ export const useViewOrdersStyles = createStyles((theme) => ({
     fontWeight: 600,
     color: theme.colors.text.onPrimary,
   },
+  dateFilterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.background.primary,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.secondary,
+  },
+  dateFilterButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.background.secondary,
+    borderWidth: 1,
+    borderColor: theme.colors.border.secondary,
+  },
+  dateFilterText: {
+    flex: 1,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text.primary,
+    marginLeft: theme.spacing.xs,
+    marginRight: theme.spacing.xs,
+  },
+  clearDateButton: {
+    marginLeft: theme.spacing.sm,
+    padding: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.background.tertiary,
+  },
+
+  // Update these existing styles to accommodate longer filter names:
   filterContainer: {
     flexDirection: 'row',
     backgroundColor: theme.colors.background.primary,
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md, // Reduced from lg
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border.secondary,
@@ -46,20 +82,51 @@ export const useViewOrdersStyles = createStyles((theme) => ({
   filterTab: {
     flex: 1,
     paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.xs, // Added horizontal padding
     alignItems: 'center',
     marginHorizontal: theme.spacing.xs,
     borderRadius: theme.borderRadius.md,
-    minWidth: 0,
+    minWidth: 0, // Allow text to wrap if needed
+  },
+  filterText: {
+    fontSize: theme.typography.fontSize.xs, // Reduced from sm
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text.secondary,
+    textAlign: 'center',
   },
   filterTabActive: {
     backgroundColor: theme.colors.primary.light,
   },
-  filterText: {
+  filterTabContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2, // Small gap between text and count
+  },
+
+  filterCountBadge: {
+    backgroundColor: theme.colors.background.tertiary,
+    borderRadius: theme.borderRadius.sm,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    minWidth: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  filterCountBadgeActive: {
+    backgroundColor: theme.colors.primary.main,
+  },
+
+  filterCountText: {
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
-    textAlign: 'center',
+    color: theme.colors.text.tertiary,
+    lineHeight: 12,
+  },
+
+  filterCountTextActive: {
+    color: theme.colors.text.onPrimary,
+    fontWeight: theme.typography.fontWeight.bold,
   },
   filterTextActive: {
     color: theme.colors.primary.dark,

@@ -1,4 +1,4 @@
-// app/ViewOrders/index.tsx
+// app/ViewOrders/index.tsx - Updated with Date Range Filter
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import React, { useEffect, useState } from 'react';
@@ -19,6 +19,7 @@ import { Colors } from '../../theme';
 import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
 import { CustomHeader } from '../CustomHeader';
+import { DateRange, DateRangePicker } from '../common/DateRangePicker/index';
 import { useViewOrdersStyles } from './viewOrders.styles';
 
 interface ViewOrdersScreenProps {
@@ -36,18 +37,29 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
   const { token } = useAuth();
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('All');
+  const [filterCounts, setFilterCounts] = useState<Record<FilterType, number>>({
+    'All': 0,
+    'In Progress': 0,
+    'Active': 0,
+    'Completed': 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  // Date range filter states
+  const [dateRange, setDateRange] = useState<DateRange>({ startDate: null, endDate: null });
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const { theme } = useTheme();
   const styles = useViewOrdersStyles(theme);
 
   useEffect(() => {
     loadOrders(true);
-  }, [selectedFilter]);
+    loadFilterCounts();
+  }, [selectedFilter, dateRange]);
 
   useEffect(() => {
     // If navigated with an orderId, scroll to that order
@@ -57,7 +69,6 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
   }, [route?.params?.orderId]);
 
   const getStatusForFilter = (filter: FilterType): string | undefined => {
-    console.log(`Getting status for filter: ${filter}`);
     switch (filter) {
       case 'In Progress':
         return 'pickup requested,pickup assigned'; // Add your actual status names
@@ -80,6 +91,14 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
     return false;
   };
 
+  const formatDateForAPI = (date: Date): string => {
+    // Use local date components to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const loadOrders = async (reset: boolean = false) => {
     if (reset) {
       setIsLoading(true);
@@ -97,15 +116,19 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
       };
 
       if (statusFilter) {
-        if (statusFilter.includes(',')) {
-          params.status = statusFilter;
-        } else {
-          params.status = statusFilter;
-        }
+        params.status = statusFilter;
+      }
+
+      // Add date range filters
+      if (dateRange.startDate) {
+        params.date_from = formatDateForAPI(dateRange.startDate);
+      }
+      if (dateRange.endDate) {
+        params.date_to = formatDateForAPI(dateRange.endDate);
       }
 
       const response: PaginatedResponse<OrderListItem> = await orderService.getClientOrders(params);
-
+      
       if (reset) {
         console.log('Orders fetched:', response.results[0]);
         setOrders(response.results);
@@ -127,14 +150,61 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
     }
   };
 
+  const loadFilterCounts = async () => {
+    try {
+      const promises = filters.map(async (filter) => {
+        const statusFilter = getStatusForFilter(filter);
+        const params: any = {
+          page: 1,
+          page_size: 1, // We only need the count, so minimal data
+        };
+
+        if (statusFilter && filter !== 'All') {
+          params.status = statusFilter;
+        }
+
+        // Add date range filters if they exist
+        if (dateRange.startDate) {
+          params.date_from = formatDateForAPI(dateRange.startDate);
+        }
+        if (dateRange.endDate) {
+          params.date_to = formatDateForAPI(dateRange.endDate);
+        }
+
+        const response: PaginatedResponse<OrderListItem> = await orderService.getClientOrders(params);
+        return { filter, count: response.count || 0 };
+      });
+
+      const results = await Promise.all(promises);
+      const countsMap: Record<FilterType, number> = {} as Record<FilterType, number>;
+      
+      results.forEach(({ filter, count }) => {
+        countsMap[filter] = count;
+      });
+
+      setFilterCounts(countsMap);
+    } catch (error) {
+      console.error('Error loading filter counts:', error);
+      // Reset counts on error
+      setFilterCounts({
+        'All': 0,
+        'In Progress': 0,
+        'Active': 0,
+        'Completed': 0,
+      });
+    }
+  };
+
   const handleRefresh = () => {
     setIsRefreshing(true);
     loadOrders(true);
+    loadFilterCounts();
   };
 
   const handleLoadMore = () => {
     if (!isLoadingMore && hasMore) {
       loadOrders(false);
+      loadFilterCounts();
     }
   };
 
@@ -186,6 +256,40 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
       'Cancelled': 'cancel',
     };
     return iconMap[status] || 'info';
+  };
+
+  const handleDateRangeApply = (newDateRange: DateRange) => {
+    setDateRange(newDateRange);
+  };
+
+  const handleDateRangeClear = () => {
+    setDateRange({ startDate: null, endDate: null });
+  };
+
+  const getDateRangeDisplayText = (): string => {
+    if (!dateRange.startDate && !dateRange.endDate) {
+      return 'All Time';
+    }
+    
+    if (dateRange.startDate && dateRange.endDate) {
+      const start = dateRange.startDate.toLocaleDateString('en-IN', { 
+        day: '2-digit', 
+        month: 'short' 
+      });
+      const end = dateRange.endDate.toLocaleDateString('en-IN', { 
+        day: '2-digit', 
+        month: 'short' 
+      });
+      
+      // Same year, show abbreviated format
+      if (dateRange.startDate.getFullYear() === dateRange.endDate.getFullYear()) {
+        return `${start} - ${end}`;
+      }
+      
+      return `${start} ${dateRange.startDate.getFullYear()} - ${end} ${dateRange.endDate.getFullYear()}`;
+    }
+    
+    return 'Custom Range';
   };
 
   const renderOrderItem = ({ item }: { item: OrderListItem }) => {
@@ -297,7 +401,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
           ? 'No active orders'
           : 'No completed orders'}
       </Text>
-      <TouchableOpacity
+      <TouchableOpacity 
         style={styles.createOrderButton}
         onPress={() => navigation.navigate('CreateOrder')}
       >
@@ -317,6 +421,9 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
   };
 
   const filters: FilterType[] = ['All', 'In Progress', 'Active', 'Completed'];
+
+  console.log(`Rendering ViewOrdersScreen with ${orders.length} orders, filter: ${selectedFilter}, isLoading: ${isLoading}, isRefreshing: ${isRefreshing}`);
+  console.log('Current orders:', orders[0]);
 
   return (
     <>
@@ -341,16 +448,52 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
               ]}
               onPress={() => setSelectedFilter(filter)}
             >
-              <Text
-                style={[
-                  styles.filterText,
-                  selectedFilter === filter && styles.filterTextActive,
-                ]}
-              >
-                {filter}
-              </Text>
+              <View style={styles.filterTabContent}>
+                <Text
+                  style={[
+                    styles.filterText,
+                    selectedFilter === filter && styles.filterTextActive,
+                  ]}
+                >
+                  {filter}
+                </Text>
+                <View style={[
+                  styles.filterCountBadge,
+                  selectedFilter === filter && styles.filterCountBadgeActive,
+                ]}>
+                  <Text style={[
+                    styles.filterCountText,
+                    selectedFilter === filter && styles.filterCountTextActive,
+                  ]}>
+                    {filterCounts[filter]}
+                  </Text>
+                </View>
+              </View>
             </TouchableOpacity>
           ))}
+        </View>
+
+        {/* Date Range Filter */}
+        <View style={styles.dateFilterContainer}>
+          <TouchableOpacity
+            style={styles.dateFilterButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Feather name="calendar" size={16} color={theme.colors.primary.main} />
+            <Text style={styles.dateFilterText}>
+              {getDateRangeDisplayText()}
+            </Text>
+            <Feather name="chevron-down" size={16} color={theme.colors.text.secondary} />
+          </TouchableOpacity>
+          
+          {(dateRange.startDate || dateRange.endDate) && (
+            <TouchableOpacity
+              style={styles.clearDateButton}
+              onPress={handleDateRangeClear}
+            >
+              <Feather name="x" size={14} color={theme.colors.text.secondary} />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Orders List */}
@@ -384,6 +527,15 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
             }
           />
         )}
+
+        {/* Date Range Picker Modal */}
+        <DateRangePicker
+          isVisible={showDatePicker}
+          onClose={() => setShowDatePicker(false)}
+          onApply={handleDateRangeApply}
+          onClear={handleDateRangeClear}
+          initialRange={dateRange}
+        />
       </SafeAreaView>
     </>
   );
