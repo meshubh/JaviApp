@@ -6,10 +6,18 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  user: User;
   token: string;
-  refreshToken?: string;
-  message?: string;
+  user: {
+    id: string;
+    client_id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    is_first_login: boolean;
+    force_password_change: boolean;
+  };
+  refreshToken: string;
+  requires_password_change: boolean;
 }
 
 export interface User {

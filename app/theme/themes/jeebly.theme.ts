@@ -51,6 +51,7 @@ export const JeeblyTheme: ThemeStructure = {
       primary: '#E0E0E0',
       secondary: '#F5F5F5',
       focus: '#00BFA5',
+      error: '#FF6B6B',
     },
     status: {
       active: '#00BFA5',
@@ -61,4 +62,28 @@ export const JeeblyTheme: ThemeStructure = {
     },
   },
   ...sharedStyles,
+  typography: {
+    ...sharedStyles.typography,
+    styles: {
+      ...sharedStyles.typography.styles,
+      h1: { ...sharedStyles.typography.styles.h1, color: '#263238' },
+      h2: { ...sharedStyles.typography.styles.h2, color: '#263238' },
+      h3: { ...sharedStyles.typography.styles.h3, color: '#263238' },
+      h4: { ...sharedStyles.typography.styles.h4, color: '#263238' },
+      body: { ...sharedStyles.typography.styles.body, color: '#546E7A' },
+      bodySmall: { ...sharedStyles.typography.styles.bodySmall, color: '#546E7A' },
+      label: { ...sharedStyles.typography.styles.label, color: '#263238' },
+      caption: { ...sharedStyles.typography.styles.caption, color: '#78909C' },
+      button: { ...sharedStyles.typography.styles.button, color: '#FFFFFF' },
+    },
+  },
+  overlay: {
+    backdrop: {
+      backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    },
+    modal: {
+      ...sharedStyles.overlay.modal,
+      backgroundColor: '#FFFFFF',
+    },
+  },
 };

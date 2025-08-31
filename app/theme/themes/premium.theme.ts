@@ -64,6 +64,7 @@ export const PremiumTheme: ThemeStructure = {
       primary: '#E4E4E7',
       secondary: '#F4F4F5',
       focus: '#1E40AF',
+      error: '#DC2626',
     },
     status: {
       active: '#059669',
@@ -74,4 +75,28 @@ export const PremiumTheme: ThemeStructure = {
     },
   },
   ...sharedStyles,
+  typography: {
+    ...sharedStyles.typography,
+    styles: {
+      ...sharedStyles.typography.styles,
+      h1: { ...sharedStyles.typography.styles.h1, color: '#18181B' },
+      h2: { ...sharedStyles.typography.styles.h2, color: '#18181B' },
+      h3: { ...sharedStyles.typography.styles.h3, color: '#18181B' },
+      h4: { ...sharedStyles.typography.styles.h4, color: '#18181B' },
+      body: { ...sharedStyles.typography.styles.body, color: '#52525B' },
+      bodySmall: { ...sharedStyles.typography.styles.bodySmall, color: '#52525B' },
+      label: { ...sharedStyles.typography.styles.label, color: '#18181B' },
+      caption: { ...sharedStyles.typography.styles.caption, color: '#71717A' },
+      button: { ...sharedStyles.typography.styles.button, color: '#FFFFFF' },
+    },
+  },
+  overlay: {
+    backdrop: {
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    },
+    modal: {
+      ...sharedStyles.overlay.modal,
+      backgroundColor: '#FFFFFF',
+    },
+  },
 };

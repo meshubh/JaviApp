@@ -51,6 +51,7 @@ export const DHLTheme: ThemeStructure = {
       primary: '#E0E0E0',
       secondary: '#EEEEEE',
       focus: '#FFCC00',
+      error: '#D40511',
     },
     status: {
       active: '#4CAF50',
@@ -61,4 +62,28 @@ export const DHLTheme: ThemeStructure = {
     },
   },
   ...sharedStyles,
+  typography: {
+    ...sharedStyles.typography,
+    styles: {
+      ...sharedStyles.typography.styles,
+      h1: { ...sharedStyles.typography.styles.h1, color: '#212121' },
+      h2: { ...sharedStyles.typography.styles.h2, color: '#212121' },
+      h3: { ...sharedStyles.typography.styles.h3, color: '#212121' },
+      h4: { ...sharedStyles.typography.styles.h4, color: '#212121' },
+      body: { ...sharedStyles.typography.styles.body, color: '#757575' },
+      bodySmall: { ...sharedStyles.typography.styles.bodySmall, color: '#757575' },
+      label: { ...sharedStyles.typography.styles.label, color: '#212121' },
+      caption: { ...sharedStyles.typography.styles.caption, color: '#9E9E9E' },
+      button: { ...sharedStyles.typography.styles.button, color: '#000000' },
+    },
+  },
+  overlay: {
+    backdrop: {
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modal: {
+      ...sharedStyles.overlay.modal,
+      backgroundColor: '#FFFFFF',
+    },
+  },
 };

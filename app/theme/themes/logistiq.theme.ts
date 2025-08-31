@@ -51,6 +51,7 @@ export const LogistiqTheme: ThemeStructure = {
       primary: '#E5E7EB',
       secondary: '#F3F4F6',
       focus: '#6366F1',
+      error: '#EF4444',
     },
     status: {
       active: '#10B981',
@@ -61,4 +62,28 @@ export const LogistiqTheme: ThemeStructure = {
     },
   },
   ...sharedStyles,
+  typography: {
+    ...sharedStyles.typography,
+    styles: {
+      ...sharedStyles.typography.styles,
+      h1: { ...sharedStyles.typography.styles.h1, color: '#111827' },
+      h2: { ...sharedStyles.typography.styles.h2, color: '#111827' },
+      h3: { ...sharedStyles.typography.styles.h3, color: '#111827' },
+      h4: { ...sharedStyles.typography.styles.h4, color: '#111827' },
+      body: { ...sharedStyles.typography.styles.body, color: '#6B7280' },
+      bodySmall: { ...sharedStyles.typography.styles.bodySmall, color: '#6B7280' },
+      label: { ...sharedStyles.typography.styles.label, color: '#111827' },
+      caption: { ...sharedStyles.typography.styles.caption, color: '#9CA3AF' },
+      button: { ...sharedStyles.typography.styles.button, color: '#FFFFFF' },
+    },
+  },
+  overlay: {
+    backdrop: {
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modal: {
+      ...sharedStyles.overlay.modal,
+      backgroundColor: '#FFFFFF',
+    },
+  },
 };

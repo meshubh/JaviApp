@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   AUTH_TOKEN: 'authToken',
   REFRESH_TOKEN: 'refreshToken',
   TOKEN_EXPIRES_AT: 'token_expires_at',
+  REQUIRES_PASSWORD_CHANGE: 'requires_password_change',
   USER_DATA: 'userData',
 };
 
@@ -39,6 +40,11 @@ class AuthService {
       // Store user data if it exists
       if (data.user) {
         await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(data.user));
+      }
+
+      // Store first login status for UI decisions
+      if (data.requires_password_change) {
+        await AsyncStorage.setItem(STORAGE_KEYS.REQUIRES_PASSWORD_CHANGE, 'true');
       }
       
       return data;
@@ -113,7 +119,8 @@ class AuthService {
         STORAGE_KEYS.AUTH_TOKEN,
         STORAGE_KEYS.REFRESH_TOKEN,
         STORAGE_KEYS.TOKEN_EXPIRES_AT,
-        STORAGE_KEYS.USER_DATA
+        STORAGE_KEYS.USER_DATA,
+        STORAGE_KEYS.REQUIRES_PASSWORD_CHANGE // Clear password change flag
       ]);
 
       console.log('Logout completed successfully');
@@ -127,7 +134,8 @@ class AuthService {
           STORAGE_KEYS.AUTH_TOKEN,
           STORAGE_KEYS.REFRESH_TOKEN,
           STORAGE_KEYS.TOKEN_EXPIRES_AT,
-          STORAGE_KEYS.USER_DATA
+          STORAGE_KEYS.USER_DATA,
+          STORAGE_KEYS.REQUIRES_PASSWORD_CHANGE
         ]);
         console.log('Local storage cleared despite errors');
       } catch (storageError) {
@@ -167,6 +175,25 @@ class AuthService {
     }
   }
 
+  // New method to check if password change is required
+  async requiresPasswordChange(): Promise<boolean> {
+    try {
+      const requiresChange = await AsyncStorage.getItem(STORAGE_KEYS.REQUIRES_PASSWORD_CHANGE);
+      const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+      
+      if (userData) {
+        const user = JSON.parse(userData);
+        // Check both stored flag and user data
+        return requiresChange === 'true' || user.is_first_login || user.force_password_change;
+      }
+      
+      return requiresChange === 'true';
+    } catch (error) {
+      console.error('Error checking password change requirement:', error);
+      return false;
+    }
+  }
+
   async refreshToken(): Promise<string | null> {
     try {
       const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
@@ -202,26 +229,46 @@ class AuthService {
     }
   }
 
-  async getCurrentUser(): Promise<any> {
+  async changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
     try {
-      // First try to get from storage
-      const userData = await apiClient.getUserData();
+      const response = await apiClient.post('/api/v1/clients/change-password', {
+        current_password: currentPassword,
+        new_password: newPassword
+      });
+
+      return response.status === 200;
+    } catch (error) {
+      console.error('Password change error:', error);
+      return false;
+    }
+  }
+
+  // New method to mark password change as completed
+  async markPasswordChangeComplete(): Promise<void> {
+    try {
+      // Remove the password change flag
+      await AsyncStorage.removeItem(STORAGE_KEYS.REQUIRES_PASSWORD_CHANGE);
       
+      // Update user data to reflect password change completion
+      const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
       if (userData) {
-        return userData;
-      }
-      
-      // If not in storage, fetch from API
-      const user = await apiClient.get('/api/auth/me');
-      
-      // Store for future use
-      if (user) {
+        const user = JSON.parse(userData);
+        user.is_first_login = false;
+        user.force_password_change = false;
         await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
       }
-      
-      return user;
     } catch (error) {
-      console.error('Get current user error:', error);
+      console.error('Error marking password change complete:', error);
+    }
+  }
+
+  // New method to get current user data
+  async getCurrentUser(): Promise<any> {
+    try {
+      const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+      return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+      console.error('Error getting current user:', error);
       return null;
     }
   }

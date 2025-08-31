@@ -50,6 +50,7 @@ export interface ThemeStructure {
       primary: string;
       secondary: string;
       focus: string;
+      error: string;
     };
     status: {
       active: string;
@@ -69,8 +70,37 @@ export interface ThemeStructure {
       semiBold: TextStyle['fontWeight'];
       bold: TextStyle['fontWeight'];
     };
+    lineHeight: Record<string, number>;
+    // Typography styles for different text types
+    styles: {
+      h1: TextStyle;
+      h2: TextStyle;
+      h3: TextStyle;
+      h4: TextStyle;
+      body: TextStyle;
+      bodySmall: TextStyle;
+      label: TextStyle;
+      caption: TextStyle;
+      button: TextStyle;
+    };
   };
   elevation: Record<number, any>;
+  // New overlay styles for modals and dialogs
+  overlay: {
+    backdrop: {
+      backgroundColor: string;
+    };
+    modal: {
+      backgroundColor: string;
+      borderRadius: number;
+      padding: number;
+      elevation: any;
+      shadowColor: string;
+      shadowOffset: { width: number; height: number };
+      shadowOpacity: number;
+      shadowRadius: number;
+    };
+  };
 }
 
 // Shared spacing, typography, etc. for all themes
@@ -110,6 +140,60 @@ export const sharedStyles = {
       semiBold: '600' as TextStyle['fontWeight'],
       bold: '700' as TextStyle['fontWeight'],
     },
+    lineHeight: {
+      tight: 1.2,
+      normal: 1.5,
+      relaxed: 1.6,
+      loose: 1.8,
+    },
+    // Shared typography styles - themes can override specific colors
+    styles: {
+      h1: {
+        fontSize: 30,
+        fontWeight: '700' as TextStyle['fontWeight'],
+        lineHeight: 36,
+      },
+      h2: {
+        fontSize: 26,
+        fontWeight: '700' as TextStyle['fontWeight'],
+        lineHeight: 32,
+      },
+      h3: {
+        fontSize: 22,
+        fontWeight: '600' as TextStyle['fontWeight'],
+        lineHeight: 28,
+      },
+      h4: {
+        fontSize: 19,
+        fontWeight: '600' as TextStyle['fontWeight'],
+        lineHeight: 24,
+      },
+      body: {
+        fontSize: 15,
+        fontWeight: '400' as TextStyle['fontWeight'],
+        lineHeight: 22,
+      },
+      bodySmall: {
+        fontSize: 13,
+        fontWeight: '400' as TextStyle['fontWeight'],
+        lineHeight: 18,
+      },
+      label: {
+        fontSize: 15,
+        fontWeight: '600' as TextStyle['fontWeight'],
+        lineHeight: 20,
+      },
+      caption: {
+        fontSize: 11,
+        fontWeight: '400' as TextStyle['fontWeight'],
+        lineHeight: 16,
+      },
+      button: {
+        fontSize: 15,
+        fontWeight: '600' as TextStyle['fontWeight'],
+        lineHeight: 20,
+      },
+    },
   },
   elevation: {
     0: {},
@@ -147,6 +231,28 @@ export const sharedStyles = {
       shadowOpacity: 0.16,
       shadowRadius: 12,
       elevation: 12,
+    },
+  },
+  // Shared overlay styles
+  overlay: {
+    backdrop: {
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modal: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+      padding: 24,
+      elevation: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 8,
+      },
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
     },
   },
 };
