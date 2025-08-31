@@ -3,7 +3,7 @@ import { Feather, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -12,7 +12,6 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
-  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -43,9 +42,8 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   const [selectedPickupAddress, setSelectedPickupAddress] = useState<string>('');
   const [selectedDropAddress, setSelectedDropAddress] = useState<string>('');
   const [dropAddressText, setDropAddressText] = useState('');
-  const [dropAddressId, setDropAddressId] = useState<string>(''); // Store address ID instead of place ID
+  const [dropAddressId, setDropAddressId] = useState<string>('');
   const [numberOfBoxes, setNumberOfBoxes] = useState('0');
-  const [numberOfBundles, setNumberOfBundles] = useState('0');
   const [numberOfInvoices, setNumberOfInvoices] = useState('0');
   const [packageDescription, setPackageDescription] = useState('');
   const [specialInstructions, setSpecialInstructions] = useState('');
@@ -53,15 +51,24 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   const [totalWeight, setTotalWeight] = useState('');
   const [isFragile, setIsFragile] = useState(false);
   const [requiresSignature, setRequiresSignature] = useState(false);
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
   const [expectedPickupDate, setExpectedPickupDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   
+  // POC fields
+  const [pickupPocName, setPickupPocName] = useState('');
+  const [pickupPocNumber, setPickupPocNumber] = useState('');
+  const [dropPocName, setDropPocName] = useState('');
+  const [dropPocNumber, setDropPocNumber] = useState('');
+  
   // UI state
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  
+  // Dynamic form state
+  const [selectedContractData, setSelectedContractData] = useState<Contract | null>(null);
+  const [isPerKmContract, setIsPerKmContract] = useState(false);
+  const [isPerShipmentContract, setIsPerShipmentContract] = useState(false);
 
   // Use useFocusEffect to reload data when screen comes into focus
   useFocusEffect(
@@ -75,6 +82,56 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
       };
     }, [])
   );
+
+  // Effect to handle contract selection changes
+  useEffect(() => {
+    if (selectedContract) {
+      const contract = contracts.find(c => c.id === selectedContract);
+      setSelectedContractData(contract || null);
+      
+      if (contract) {
+        const isPKM = contract.pricing_model?.toLowerCase().includes('km') || contract.pricing_model.toLowerCase().includes('distance') || contract.pricing_model?.toLowerCase().includes('per km');
+        const isPS = contract.pricing_model?.toLowerCase().includes('shipment') || contract.pricing_model?.toLowerCase().includes('per shipment');
+
+        console.log(`Selected contract: ${contract.title} (${contract.pricing_model}) - isPerKm: ${isPKM}, isPerShipment: ${isPS}`);
+        
+        setIsPerKmContract(isPKM);
+        setIsPerShipmentContract(isPS);
+        
+        // Reset relevant fields when contract changes
+        if (!isPKM) {
+          setDropAddressText('');
+          setDropAddressId('');
+          setSelectedDropAddress('');
+          setDropPocName('');
+          setDropPocNumber('');
+        }
+        
+        // Prefill POC information from client data (you'll need to get this from your auth context or API)
+        prefillPocInformation();
+      }
+    } else {
+      setSelectedContractData(null);
+      setIsPerKmContract(false);
+      setIsPerShipmentContract(false);
+    }
+  }, [selectedContract, contracts]);
+
+  const prefillPocInformation = async () => {
+    // You'll need to get client data from your auth context or make an API call
+    // For now, I'll show the structure - replace with actual client data
+    try {
+      // const clientData = await orderService.getClientProfile(); // or get from auth context
+      // setPickupPocName(clientData.poc1_name || '');
+      // setPickupPocNumber(clientData.poc1_number || '');
+      
+      // Placeholder - replace with actual client data
+      setPickupPocName(''); // Will be filled with client.poc1_name
+      setPickupPocNumber(''); // Will be filled with client.poc1_number
+    } catch (error) {
+      console.error('Error prefilling POC info:', error);
+    }
+  };
 
   const loadInitialData = async () => {
     try {
@@ -115,7 +172,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     setDropAddressText('');
     setDropAddressId('');
     setNumberOfBoxes('0');
-    setNumberOfBundles('0');
     setNumberOfInvoices('0');
     setPackageDescription('');
     setSpecialInstructions('');
@@ -123,8 +179,10 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     setTotalWeight('');
     setIsFragile(false);
     setRequiresSignature(false);
-    setCustomerPhone('');
-    setCustomerEmail('');
+    setPickupPocName('');
+    setPickupPocNumber('');
+    setDropPocName('');
+    setDropPocNumber('');
     setExpectedPickupDate(new Date());
   };
 
@@ -132,7 +190,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     setDropAddressText(address);
     if (addressId) {
       setDropAddressId(addressId);
-      setSelectedDropAddress(addressId); // Use the address ID from our database
+      setSelectedDropAddress(addressId);
     } else {
       setDropAddressId('');
       setSelectedDropAddress('');
@@ -150,18 +208,45 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
       return false;
     }
 
-    if (!dropAddressText) {
-      Alert.alert('Validation Error', 'Please select a drop address');
+    if (!pickupPocName) {
+      Alert.alert('Validation Error', 'Please enter pickup POC name');
       return false;
     }
-    
-    const boxes = parseInt(numberOfBoxes) || 0;
-    const bundles = parseInt(numberOfBundles) || 0;
-    const invoices = parseInt(numberOfInvoices) || 0;
-    
-    if (boxes === 0 && invoices === 0) {
-      Alert.alert('Validation Error', 'Please enter at least one box or invoice');
+
+    if (!pickupPocNumber) {
+      Alert.alert('Validation Error', 'Please enter pickup POC number');
       return false;
+    }
+
+    // Per KM contract validations
+    if (isPerKmContract) {
+      if (!dropAddressText) {
+        Alert.alert('Validation Error', 'Please select a drop address for Per KM contracts');
+        return false;
+      }
+      if (!dropPocName) {
+        Alert.alert('Validation Error', 'Please enter drop POC name for Per KM contracts');
+        return false;
+      }
+      if (!dropPocNumber) {
+        Alert.alert('Validation Error', 'Please enter drop POC number for Per KM contracts');
+        return false;
+      }
+    }
+
+    // Per Shipment contract validations
+    if (isPerShipmentContract) {
+      const boxes = parseInt(numberOfBoxes) || 0;
+      const invoices = parseInt(numberOfInvoices) || 0;
+      
+      if (boxes === 0) {
+        Alert.alert('Validation Error', 'Number of boxes is mandatory for Per Shipment contracts');
+        return false;
+      }
+      if (invoices === 0) {
+        Alert.alert('Validation Error', 'Number of invoices is mandatory for Per Shipment contracts');
+        return false;
+      }
     }
     
     if (expectedPickupDate < new Date()) {
@@ -181,10 +266,13 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
       const orderData: CreateOrderData = {
         contract_id: selectedContract,
         pickup_address_id: selectedPickupAddress,
-        drop_address_id: selectedDropAddress || undefined,
-        drop_address_text: dropAddressText || undefined,
+        drop_address_id: isPerKmContract ? selectedDropAddress || undefined : undefined,
+        drop_address_text: isPerKmContract ? dropAddressText || undefined : undefined,
+        pickup_poc_name: pickupPocName,
+        pickup_poc_number: pickupPocNumber,
+        drop_poc_name: isPerKmContract ? dropPocName || undefined : undefined,
+        drop_poc_number: isPerKmContract ? dropPocNumber || undefined : undefined,
         number_of_boxes: parseInt(numberOfBoxes) || 0,
-        number_of_bundles: parseInt(numberOfBundles) || 0,
         number_of_invoices: parseInt(numberOfInvoices) || 0,
         expected_pickup_date: expectedPickupDate.toISOString(),
         package_description: packageDescription || undefined,
@@ -193,8 +281,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
         total_weight: totalWeight ? parseFloat(totalWeight) : undefined,
         is_fragile: isFragile,
         requires_signature: requiresSignature,
-        customer_phone: customerPhone || undefined,
-        customer_email: customerEmail || undefined,
       };
       
       const createdOrder = await orderService.createOrder(orderData);
@@ -228,25 +314,23 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     }
   };
 
-const onDateChange = (event: any, selectedDate?: Date) => {
-  setShowDatePicker(false);
-  if (selectedDate) {
-    setExpectedPickupDate(selectedDate);
-    // Show time picker after date is selected
-    setShowTimePicker(true);
-  }
-};
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setExpectedPickupDate(selectedDate);
+      setShowTimePicker(true);
+    }
+  };
 
-const onTimeChange = (event: any, selectedTime?: Date) => {
-  setShowTimePicker(false);
-  if (selectedTime) {
-    // Combine the selected date with the new time
-    const updatedDateTime = new Date(expectedPickupDate);
-    updatedDateTime.setHours(selectedTime.getHours());
-    updatedDateTime.setMinutes(selectedTime.getMinutes());
-    setExpectedPickupDate(updatedDateTime);
-  }
-};
+  const onTimeChange = (event: any, selectedTime?: Date) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      const updatedDateTime = new Date(expectedPickupDate);
+      updatedDateTime.setHours(selectedTime.getHours());
+      updatedDateTime.setMinutes(selectedTime.getMinutes());
+      setExpectedPickupDate(updatedDateTime);
+    }
+  };
 
   if (isLoadingData) {
     return (
@@ -356,24 +440,92 @@ const onTimeChange = (event: any, selectedTime?: Date) => {
                 )}
               />
 
-              {/* Google Address Searchable Drop Address */}
-              <GoogleAddressSearchable
-                label="Drop Address"
-                value={dropAddressText}
-                onSelect={handleDropAddressSelect}
-                placeholder="Search for drop address"
-              />
+              {/* Drop Address - Only for Per KM contracts */}
+              {isPerKmContract && (
+                <GoogleAddressSearchable
+                  label="Drop Address"
+                  required={true}
+                  value={dropAddressText}
+                  onSelect={handleDropAddressSelect}
+                  placeholder="Search for drop address"
+                />
+              )}
+            </View>
+
+            {/* POC Information */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Point of Contact Information</Text>
+              
+              {/* Pickup POC - Always visible */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>
+                  Pickup POC Name <Text style={styles.requiredAsterisk}>*</Text>
+                </Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter pickup POC name"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={pickupPocName}
+                  onChangeText={setPickupPocName}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>
+                  Pickup POC Number <Text style={styles.requiredAsterisk}>*</Text>
+                </Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter pickup POC number"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={pickupPocNumber}
+                  onChangeText={setPickupPocNumber}
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              {/* Drop POC - Only for Per KM contracts */}
+              {isPerKmContract && (
+                <>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.formLabel}>
+                      Drop POC Name <Text style={styles.requiredAsterisk}>*</Text>
+                    </Text>
+                    <TextInput
+                      style={styles.formInput}
+                      placeholder="Enter drop POC name"
+                      placeholderTextColor={theme.colors.text.tertiary}
+                      value={dropPocName}
+                      onChangeText={setDropPocName}
+                    />
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.formLabel}>
+                      Drop POC Number <Text style={styles.requiredAsterisk}>*</Text>
+                    </Text>
+                    <TextInput
+                      style={styles.formInput}
+                      placeholder="Enter drop POC number"
+                      placeholderTextColor={theme.colors.text.tertiary}
+                      value={dropPocNumber}
+                      onChangeText={setDropPocNumber}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+                </>
+              )}
             </View>
 
             {/* Package Details */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Package Information</Text>
               
-              {/* First row: Boxes and Bundles */}
+              {/* Boxes and Invoices row */}
               <View style={{ flexDirection: 'row', marginBottom: theme.spacing.md }}>
                 <View style={[styles.formGroup, { flex: 1, marginRight: theme.spacing.sm, marginBottom: 0 }]}>
                   <Text style={styles.formLabel}>
-                    Boxes <Text style={styles.requiredAsterisk}>*</Text>
+                    Boxes {isPerShipmentContract && <Text style={styles.requiredAsterisk}>*</Text>}
                   </Text>
                   <View style={styles.counterContainer}>
                     <TouchableOpacity 
@@ -399,55 +551,28 @@ const onTimeChange = (event: any, selectedTime?: Date) => {
 
                 <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing.sm, marginBottom: 0 }]}>
                   <Text style={styles.formLabel}>
-                    Bundles <Text style={styles.requiredAsterisk}>*</Text>
+                    Invoices {isPerShipmentContract && <Text style={styles.requiredAsterisk}>*</Text>}
                   </Text>
                   <View style={styles.counterContainer}>
-                      <TouchableOpacity 
-                        style={styles.counterButton}
-                        onPress={() => setNumberOfBundles(String(Math.max(0, parseInt(numberOfBundles) - 1)))}
-                      >
-                        <Feather name="minus" size={20} color={theme.colors.text.primary} />
-                      </TouchableOpacity>
-                      <TextInput
-                        style={styles.counterInput}
-                        value={numberOfBundles}
-                        onChangeText={setNumberOfBundles}
-                        keyboardType="numeric"
-                      />
-                      <TouchableOpacity 
-                        style={styles.counterButton}
-                        onPress={() => setNumberOfBundles(String(parseInt(numberOfBundles) + 1))}
-                      >
-                        <Feather name="plus" size={20} color={theme.colors.text.primary} />
-                      </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={styles.counterButton}
+                      onPress={() => setNumberOfInvoices(String(Math.max(0, parseInt(numberOfInvoices) - 1)))}
+                    >
+                      <Feather name="minus" size={20} color={theme.colors.text.primary} />
+                    </TouchableOpacity>
+                    <TextInput
+                      style={styles.counterInput}
+                      value={numberOfInvoices}
+                      onChangeText={setNumberOfInvoices}
+                      keyboardType="numeric"
+                    />
+                    <TouchableOpacity 
+                      style={styles.counterButton}
+                      onPress={() => setNumberOfInvoices(String(parseInt(numberOfInvoices) + 1))}
+                    >
+                      <Feather name="plus" size={20} color={theme.colors.text.primary} />
+                    </TouchableOpacity>
                   </View>
-                </View>
-              </View>
-
-              {/* Second row: Invoices taking full width */}
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>
-                  Invoices <Text style={styles.requiredAsterisk}>*</Text>
-                </Text>
-                <View style={styles.counterContainer}>
-                  <TouchableOpacity 
-                    style={styles.counterButton}
-                    onPress={() => setNumberOfInvoices(String(Math.max(0, parseInt(numberOfInvoices) - 1)))}
-                  >
-                    <Feather name="minus" size={20} color={theme.colors.text.primary} />
-                  </TouchableOpacity>
-                  <TextInput
-                    style={styles.counterInput}
-                    value={numberOfInvoices}
-                    onChangeText={setNumberOfInvoices}
-                    keyboardType="numeric"
-                  />
-                  <TouchableOpacity 
-                    style={styles.counterButton}
-                    onPress={() => setNumberOfInvoices(String(parseInt(numberOfInvoices) + 1))}
-                  >
-                    <Feather name="plus" size={20} color={theme.colors.text.primary} />
-                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -464,64 +589,6 @@ const onTimeChange = (event: any, selectedTime?: Date) => {
                     style={{ color: theme.colors.text.primary }}
                   />
                 </View>
-              </View>
-
-              <View style={{ flexDirection: 'row' }}>
-                <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
-                  <Text style={styles.formLabel}>Weight (kg)</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="0.0"
-                    placeholderTextColor={theme.colors.text.tertiary}
-                    value={totalWeight}
-                    onChangeText={setTotalWeight}
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-
-                <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
-                  <Text style={styles.formLabel}>Declared Value (₹)</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="0.00"
-                    placeholderTextColor={theme.colors.text.tertiary}
-                    value={declaredValue}
-                    onChangeText={setDeclaredValue}
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.toggleContainer}>
-                <View style={styles.toggleLabel}>
-                  <MaterialIcons name="warning" size={20} color={theme.colors.semantic.warning} />
-                  <Text style={styles.toggleDescription}>Fragile Package</Text>
-                </View>
-                <Switch
-                  value={isFragile}
-                  onValueChange={setIsFragile}
-                  trackColor={{ 
-                    false: theme.colors.neutral[300], 
-                    true: theme.colors.primary.light 
-                  }}
-                  thumbColor={isFragile ? theme.colors.primary.main : theme.colors.neutral[100]}
-                />
-              </View>
-
-              <View style={styles.toggleContainer}>
-                <View style={styles.toggleLabel}>
-                  <MaterialIcons name="edit" size={20} color={theme.colors.primary.main} />
-                  <Text style={styles.toggleDescription}>Requires Signature</Text>
-                </View>
-                <Switch
-                  value={requiresSignature}
-                  onValueChange={setRequiresSignature}
-                  trackColor={{ 
-                    false: theme.colors.neutral[300], 
-                    true: theme.colors.primary.light 
-                  }}
-                  thumbColor={requiresSignature ? theme.colors.primary.main : theme.colors.neutral[100]}
-                />
               </View>
             </View>
 
@@ -586,36 +653,6 @@ const onTimeChange = (event: any, selectedTime?: Date) => {
                     style={{ color: theme.colors.text.primary }}
                   />
                 </View>
-              </View>
-            </View>
-
-            {/* Contact Information */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Contact Information (Optional)</Text>
-              
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Phone Number</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Enter phone number"
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  value={customerPhone}
-                  onChangeText={setCustomerPhone}
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Email Address</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Enter email address"
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  value={customerEmail}
-                  onChangeText={setCustomerEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
               </View>
             </View>
 

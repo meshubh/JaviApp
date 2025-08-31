@@ -38,7 +38,7 @@ export const useViewOrdersStyles = createStyles((theme) => ({
   filterContainer: {
     flexDirection: 'row',
     backgroundColor: theme.colors.background.primary,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border.secondary,
@@ -46,17 +46,20 @@ export const useViewOrdersStyles = createStyles((theme) => ({
   filterTab: {
     flex: 1,
     paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xs,
     alignItems: 'center',
     marginHorizontal: theme.spacing.xs,
     borderRadius: theme.borderRadius.md,
+    minWidth: 0,
   },
   filterTabActive: {
     backgroundColor: theme.colors.primary.light,
   },
   filterText: {
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text. secondary,
+    color: theme.colors.text.secondary,
+    textAlign: 'center',
   },
   filterTextActive: {
     color: theme.colors.primary.dark,
@@ -169,7 +172,7 @@ export const useViewOrdersStyles = createStyles((theme) => ({
   },
   actionContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginTop: theme.spacing.md,
     paddingTop: theme.spacing.md,

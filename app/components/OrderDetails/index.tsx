@@ -20,6 +20,7 @@ import { Colors, Spacing } from '../../theme';
 import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
 import { CustomHeader } from '../CustomHeader';
+import ShipmentsList from '../ShipmentsLists/index';
 import { useOrderDetailsStyles } from './orderDetails.styles';
 
 interface OrderDetailsScreenProps {
@@ -113,6 +114,16 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
 
   const sendEmail = (email: string) => {
     Linking.openURL(`mailto:${email}`);
+  };
+
+  // Helper function to determine if contract is distance/km based
+  const isDistanceBasedContract = (): boolean => {
+    if (order?.drop_address_text && order.drop_poc_name && order.drop_poc_number) {
+      console.log(`Order ${order.order_number} is distance-based.`);
+      return true;
+    }
+    console.log(`Order ${order?.order_number} is not distance-based.`);
+    return false;
   };
 
   const renderStatusTimeline = () => {
@@ -214,6 +225,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
   }
 
   const statusColor = orderService.getStatusColor(order.status);
+  const showDropLocation = isDistanceBasedContract();
 
   return (
     <>
@@ -262,6 +274,15 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
             )}
           </View>
 
+          {/* Shipments List */}
+          {order.shipments_info && order.shipments_info.length > 0 && (
+            <View style={styles.section}>
+              <ShipmentsList 
+                shipments={order.shipments_info}
+              />
+            </View>
+          )}
+
           {/* Package Information */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Package Information</Text>
@@ -269,47 +290,16 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
               <Text style={styles.infoLabel}>Packages:</Text>
               <Text style={styles.infoValue}>
                 {order.number_of_boxes > 0 && `${order.number_of_boxes} box${order.number_of_boxes > 1 ? 'es' : ''}`}
-                {order.number_of_boxes > 0 && order.number_of_bundles > 0 && ', '}
-                {order.number_of_bundles > 0 && `${order.number_of_bundles} bundle${order.number_of_bundles > 1 ? 's' : ''}`}
-                {order.number_of_boxes > 0 && order.number_of_bundles > 0 && order.number_of_invoices > 0 && ', '}
+                {order.number_of_boxes > 0 && order.number_of_invoices > 0 && ', '}
                 {order.number_of_invoices > 0 && `${order.number_of_invoices} invoice${order.number_of_invoices > 1 ? 's' : ''}`}
               </Text>
             </View>
-            {order.total_weight && (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Total Weight:</Text>
-                <Text style={styles.infoValue}>{order.total_weight} kg</Text>
-              </View>
-            )}
-            {order.declared_value && (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Declared Value:</Text>
-                <Text style={styles.infoValue}>₹{order.declared_value}</Text>
-              </View>
-            )}
             {order.package_description && (
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Description:</Text>
                 <Text style={styles.infoValue}>{order.package_description}</Text>
               </View>
             )}
-            <View style={styles.tagContainer}>
-              {order.is_fragile && (
-                <View style={styles.tag}>
-                  <MaterialIcons name="warning" size={12} color={Colors.text.warning} />
-                  <Text style={styles.tagText}>Fragile</Text>
-                </View>
-              )}
-              {order.requires_signature && (
-                <View style={styles.tag}>
-                  <MaterialIcons name="edit" size={12} color={Colors.primary.blue} />
-                  <Text style={styles.tagText}>Signature Required</Text>
-                </View>
-              )}
-              <View style={[styles.tag, styles.priorityTag]}>
-                <Text style={styles.tagText}>{order.priority} Priority</Text>
-              </View>
-            </View>
           </View>
 
           {/* Addresses */}
@@ -327,7 +317,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
               </Text>
               {order.pickup_address.contact_person_name && (
                 <View style={styles.contactInfo}>
-                  <Feather name="user" size={14} color={theme.colors.text. secondary} />
+                  <Feather name="user" size={14} color={theme.colors.text.secondary} />
                   <Text style={styles.contactText}>
                     {order.pickup_address.contact_person_name}
                   </Text>
@@ -356,47 +346,52 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
               )}
             </View>
 
-            <Text style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>Drop Address</Text>
-            <View style={styles.addressCard}>
-              <View style={styles.addressHeader}>
-                <Feather name="map-pin" size={16} color={theme.colors.semantic.error} />
-                <Text style={styles.addressTitle}>Drop Location</Text>
-              </View>
-              <Text style={styles.addressText}>
-                {order.drop_address_text || 
-                 `${order.drop_address.address_line_1}
+            {/* Drop Address - Only show for distance/km based contracts */}
+            {showDropLocation && (
+              <>
+                <Text style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>Drop Address</Text>
+                <View style={styles.addressCard}>
+                  <View style={styles.addressHeader}>
+                    <Feather name="map-pin" size={16} color={theme.colors.semantic.error} />
+                    <Text style={styles.addressTitle}>Drop Location</Text>
+                  </View>
+                  <Text style={styles.addressText}>
+                    {order.drop_address_text || 
+                     `${order.drop_address.address_line_1}
 ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' : ''}${order.drop_address.city}, ${order.drop_address.state} ${order.drop_address.pincode}`}
-              </Text>
-              {order.drop_address.contact_person_name && (
-                <View style={styles.contactInfo}>
-                  <Feather name="user" size={14} color={theme.colors.text. secondary} />
-                  <Text style={styles.contactText}>
-                    {order.drop_address.contact_person_name}
                   </Text>
+                  {order.drop_address.contact_person_name && (
+                    <View style={styles.contactInfo}>
+                      <Feather name="user" size={14} color={theme.colors.text.secondary} />
+                      <Text style={styles.contactText}>
+                        {order.drop_address.contact_person_name}
+                      </Text>
+                    </View>
+                  )}
+                  {order.drop_address.contact_person_phone && (
+                    <TouchableOpacity
+                      style={styles.contactInfo}
+                      onPress={() => callPhone(order.drop_address.contact_person_phone!)}
+                    >
+                      <Feather name="phone" size={14} color={theme.colors.primary.main} />
+                      <Text style={[styles.contactText, styles.contactLink]}>
+                        {order.drop_address.contact_person_phone}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  {order.drop_maps_url && (
+                    <TouchableOpacity
+                      style={styles.mapLink}
+                      onPress={() => openMaps(order.drop_maps_url,
+                        order.drop_address_text || `${order.drop_address.address_line_1}, ${order.drop_address.city}`)}
+                    >
+                      <MaterialIcons name="directions" size={16} color={theme.colors.primary.main} />
+                      <Text style={styles.mapLinkText}>Get Directions</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-              )}
-              {order.drop_address.contact_person_phone && (
-                <TouchableOpacity
-                  style={styles.contactInfo}
-                  onPress={() => callPhone(order.drop_address.contact_person_phone!)}
-                >
-                  <Feather name="phone" size={14} color={theme.colors.primary.main} />
-                  <Text style={[styles.contactText, styles.contactLink]}>
-                    {order.drop_address.contact_person_phone}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              {order.drop_maps_url && (
-                <TouchableOpacity
-                  style={styles.mapLink}
-                  onPress={() => openMaps(order.drop_maps_url,
-                    order.drop_address_text || `${order.drop_address.address_line_1}, ${order.drop_address.city}`)}
-                >
-                  <MaterialIcons name="directions" size={16} color={theme.colors.primary.main} />
-                  <Text style={styles.mapLinkText}>Get Directions</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+              </>
+            )}
           </View>
 
           {/* Schedule */}

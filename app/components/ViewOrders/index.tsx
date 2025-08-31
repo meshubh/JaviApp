@@ -30,7 +30,7 @@ interface ViewOrdersScreenProps {
   };
 }
 
-type FilterType = 'All' | 'Active' | 'Delivered' | 'Cancelled';
+type FilterType = 'All' | 'In Progress' | 'Active' | 'Completed';
 
 const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }) => {
   const { token } = useAuth();
@@ -57,16 +57,27 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
   }, [route?.params?.orderId]);
 
   const getStatusForFilter = (filter: FilterType): string | undefined => {
+    console.log(`Getting status for filter: ${filter}`);
     switch (filter) {
+      case 'In Progress':
+        return 'pickup requested,pickup assigned'; // Add your actual status names
       case 'Active':
-        return 'In Transit,Picked,Ready to Pick,Created,Out for Delivery';
-      case 'Delivered':
-        return 'Delivered';
-      case 'Cancelled':
-        return 'Cancelled';
+        return 'Ready to Pick,Picked,Out for Delivery,In Transit';
+      case 'Completed':
+        return 'Delivered,Cancelled,Returned,Failed Delivery';
       default:
         return undefined;
     }
+  };
+
+  // Helper function to determine if contract is distance/km based
+  const isDistanceBasedContract = (order: OrderListItem): boolean => {
+    if (order?.drop_address_text && order.drop_poc_name && order.drop_poc_number) {
+      console.log(`Order ${order.order_number} is distance-based.`);
+      return true;
+    }
+    console.log(`Order ${order?.order_number} is not distance-based.`);
+    return false;
   };
 
   const loadOrders = async (reset: boolean = false) => {
@@ -86,11 +97,8 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
       };
 
       if (statusFilter) {
-        // For multiple statuses, we might need to handle this differently
-        // depending on your backend implementation
         if (statusFilter.includes(',')) {
-          // Backend might need to handle multiple statuses differently
-          params.status = statusFilter.split(',')[0]; // Simplified for now
+          params.status = statusFilter;
         } else {
           params.status = statusFilter;
         }
@@ -182,6 +190,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
 
   const renderOrderItem = ({ item }: { item: OrderListItem }) => {
     const statusColor = getStatusColor(item.status);
+    const showDropLocation = isDistanceBasedContract(item);
     
     return (
       <TouchableOpacity 
@@ -214,25 +223,31 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
                 {item.pickup_city || item.pickup_address_text?.substring(0, 30)}
               </Text>
             </View>
-            <Feather name="arrow-down" size={14} color={Colors.text.tertiary} />
-            <View style={styles.locationRow}>
-              <Feather name="map-pin" size={14} color={theme.colors.semantic.error} />
-              <Text style={styles.locationText} numberOfLines={1}>
-                {item.drop_city || item.drop_address_text?.substring(0, 30)}
+            
+            {/* Only show drop location for distance/km based contracts */}
+            {showDropLocation && (
+              <>
+                <Feather name="arrow-down" size={14} color={Colors.text.tertiary} />
+                <View style={styles.locationRow}>
+                  <Feather name="map-pin" size={14} color={theme.colors.semantic.error} />
+                  <Text style={styles.locationText} numberOfLines={1}>
+                    {item.drop_city || item.drop_address_text?.substring(0, 30)}
+                  </Text>
+                </View>
+              </>
+            )}
+          </View>
+
+          {item.number_of_boxes > 0 || item.number_of_invoices > 0 ? (
+            <View style={styles.packageInfo}>
+              <MaterialIcons name="inventory-2" size={14} color={Colors.text.tertiary} />
+              <Text style={styles.packageText}>
+                {item.number_of_boxes > 0 && `${item.number_of_boxes} box${item.number_of_boxes > 1 ? 'es' : ''}`}
+                {item.number_of_boxes > 0 && item.number_of_invoices > 0 && ', '}
+                {item.number_of_invoices > 0 && `${item.number_of_invoices} invoice${item.number_of_invoices > 1 ? 's' : ''}`}
               </Text>
             </View>
-          </View>
-          
-          <View style={styles.packageInfo}>
-            <MaterialIcons name="inventory-2" size={14} color={Colors.text.tertiary} />
-            <Text style={styles.packageText}>
-              {item.number_of_boxes > 0 && `${item.number_of_boxes} box${item.number_of_boxes > 1 ? 'es' : ''}`}
-              {item.number_of_boxes > 0 && item.number_of_bundles > 0 && ', '}
-              {item.number_of_bundles > 0 && `${item.number_of_bundles} bundle${item.number_of_bundles > 1 ? 's' : ''}`}
-              {item.number_of_boxes > 0 && item.number_of_bundles > 0 && item.number_of_invoices > 0 && ', '}
-              {item.number_of_invoices > 0 && `${item.number_of_invoices} invoice${item.number_of_invoices > 1 ? 's' : ''}`}
-            </Text>
-          </View>
+          ) : null}
         </View>
         
         <View style={styles.orderFooter}>
@@ -248,17 +263,13 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
           )}
         </View>
         
-        {(item.status === 'Created' || item.status === 'Ready to Pick') && (
+        {(item.status === 'Created') && (
           <View style={styles.actionContainer}>
             <TouchableOpacity 
               style={styles.cancelButton}
               onPress={() => handleCancelOrder(item)}
             >
               <Text style={styles.cancelButtonText}>Cancel Order</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.trackButton}>
-              <Text style={styles.trackButtonText}>Track</Text>
-              <Feather name="chevron-right" size={16} color={theme.colors.primary.main} />
             </TouchableOpacity>
           </View>
         )}
@@ -280,9 +291,13 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
       <Text style={styles.emptySubtitle}>
         {selectedFilter === 'All' 
           ? "You haven't created any orders yet" 
-          : `No ${selectedFilter.toLowerCase()} orders`}
+          : selectedFilter === 'In Progress'
+          ? 'No orders in progress'
+          : selectedFilter === 'Active'
+          ? 'No active orders'
+          : 'No completed orders'}
       </Text>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.createOrderButton}
         onPress={() => navigation.navigate('CreateOrder')}
       >
@@ -301,7 +316,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
     );
   };
 
-  const filters: FilterType[] = ['All', 'Active', 'Delivered', 'Cancelled'];
+  const filters: FilterType[] = ['All', 'In Progress', 'Active', 'Completed'];
 
   return (
     <>

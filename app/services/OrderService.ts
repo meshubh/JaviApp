@@ -13,6 +13,31 @@ export interface Contract {
   status: string;
 }
 
+interface ShipmentInfo {
+  id: string;
+  shipment_number: string;
+  status: string;
+  created_at: string;
+  pickup_completed_at?: string;
+  delivery_completed_at?: string;
+  weight?: number;
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+  };
+  tracking_number?: string;
+  description?: string;
+  special_handling?: string[];
+  proof_of_delivery?: string;
+  notes?: string;
+  number_of_boxes?: number;
+  number_of_invoices?: number;
+  declared_value?: number;
+  is_fragile?: boolean;
+  requires_signature?: boolean;
+}
+
 export interface Address {
   id: string;
   address_line_1: string;
@@ -35,7 +60,6 @@ export interface OrderListItem {
   pickup_address_text?: string;
   drop_address_text?: string;
   number_of_boxes: number;
-  number_of_bundles: number;
   number_of_invoices: number;
   total_packages: number;
   status: string;
@@ -48,41 +72,95 @@ export interface OrderListItem {
   payment_mode: string;
   is_overdue?: boolean;
   time_since_creation?: string;
+  drop_poc_name?: string;
+  drop_poc_number?: string;
+}
+
+// Supporting interfaces
+interface StatusTimelineItem {
+  status: string;
+  changed_at: string;
+  reason?: string;
+}
+
+interface LatestTracking {
+  activity: string;
+  timestamp: string;
+  location_address?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+interface DeliveryEmployee {
+  name: string;
+  phone?: string;
 }
 
 export interface OrderDetail extends OrderListItem {
-  pickup_address: Address;
-  drop_address: Address;
-  contract: Contract;
+  // Update your existing OrderDetail interface to include shipments_info
+  id: string;
+  order_number: string;
+  status: string;
+  status_display: string;
+  priority: 'Normal' | 'Urgent' | 'High';
+  created_at: string;
+  updated_at: string;
+  
+  // Package details
+  number_of_boxes: number;
+  number_of_invoices: number;
+  total_packages: number;
   total_weight?: number;
   declared_value?: number;
   package_description?: string;
   special_instructions?: string;
-  is_fragile: boolean;
-  requires_signature: boolean;
-  customer_phone?: string;
-  customer_email?: string;
-  internal_notes?: string;
-  pickup_confirmed_at?: string;
+  
+  // Addresses
+  pickup_address: Address;
+  pickup_address_text?: string;
   pickup_maps_url?: string;
+  drop_address: Address;
+  drop_address_text?: string;
   drop_maps_url?: string;
+  
+  // Contract and payment
+  contract: Contract;
+  payment_mode: string;
+  order_amount?: number;
+  cod_amount?: number;
+  
+  // Dates
+  expected_pickup_date?: string;
+  expected_delivery_date?: string;
+  pickup_confirmed_at?: string;
   pickup_completed_at?: string;
   delivery_attempted_at?: string;
   delivery_completed_at?: string;
+  
+  // Status and tracking
+  is_overdue: boolean;
+  is_fragile: boolean;
+  requires_signature: boolean;
+  delivery_attempts: number;
+  status_timeline?: StatusTimelineItem[];
+  latest_tracking?: LatestTracking;
+  delivery_employee?: DeliveryEmployee;
+  
+  // Shipments - both arrays
+  shipments: any[]; // Array of shipment IDs
+  shipments_info: ShipmentInfo[]; // Array of detailed shipment information
+  
+  // Proof documents
   order_image_url?: string;
   delivery_proof_url?: string;
-  status_timeline?: Array<{
-    status: string;
-    changed_at: string;
-    reason: string;
-  }>;
-  latest_tracking?: {
-    activity: string;
-    timestamp: string;
-    location_address?: string;
-    latitude?: number;
-    longitude?: number;
-  };
+  
+  // Contact info
+  pickup_poc_name?: string;
+  pickup_poc_number?: string;
+  drop_poc_name?: string;
+  drop_poc_number?: string;
+  customer_phone?: string;
+  customer_email?: string;
 }
 
 export interface CreateOrderData {
@@ -92,9 +170,12 @@ export interface CreateOrderData {
   drop_address_text?: string;
   drop_address_place_id?: string;
   number_of_boxes: number;
-  number_of_bundles: number;
   number_of_invoices: number;
   expected_pickup_date: string;
+  pickup_poc_name: string;
+  pickup_poc_number: string;
+  drop_poc_name?: string;
+  drop_poc_number?: string;
   package_description?: string;
   special_instructions?: string;
   declared_value?: number;
@@ -144,7 +225,6 @@ export interface DashboardStats {
   
   // Packages
   total_boxes: number;
-  total_bundles: number;
   
   // Recent activity
   recent_activity: Array<{
