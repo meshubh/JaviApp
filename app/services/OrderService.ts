@@ -48,6 +48,7 @@ export interface Address {
   contact_person_name?: string;
   contact_person_phone?: string;
   is_active: boolean;
+  contact_info?: string;
 }
 
 export interface OrderListItem {

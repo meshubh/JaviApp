@@ -51,7 +51,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   const [totalWeight, setTotalWeight] = useState('');
   const [isFragile, setIsFragile] = useState(false);
   const [requiresSignature, setRequiresSignature] = useState(false);
-  const [expectedPickupDate, setExpectedPickupDate] = useState(new Date());
+  const [expectedPickupDate, setExpectedPickupDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   
@@ -152,10 +152,10 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
       
       // Set default selections if available
       if (contractsData && contractsData.length > 0) {
-        setSelectedContract(contractsData[0].id);
+        //setSelectedContract(contractsData[0].id);
       }
       if (addressesData && addressesData.length > 0) {
-        setSelectedPickupAddress(addressesData[0].id);
+        //setSelectedPickupAddress(addressesData[0].id);
       }
     } catch (error) {
       console.error('[CreateOrder] Error loading data:', error);
@@ -183,7 +183,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     setPickupPocNumber('');
     setDropPocName('');
     setDropPocNumber('');
-    setExpectedPickupDate(new Date());
+    setExpectedPickupDate(null);
   };
 
   const handleDropAddressSelect = useCallback((address: string, addressId?: string) => {
@@ -249,7 +249,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
       }
     }
     
-    if (expectedPickupDate < new Date()) {
+    if (expectedPickupDate && expectedPickupDate < new Date()) {
       Alert.alert('Validation Error', 'Pickup date must be in the future');
       return false;
     }
@@ -274,7 +274,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
         drop_poc_number: isPerKmContract ? dropPocNumber || undefined : undefined,
         number_of_boxes: parseInt(numberOfBoxes) || 0,
         number_of_invoices: parseInt(numberOfInvoices) || 0,
-        expected_pickup_date: expectedPickupDate.toISOString(),
+        expected_pickup_date: expectedPickupDate ? expectedPickupDate.toISOString() : '',
         package_description: packageDescription || undefined,
         special_instructions: specialInstructions || undefined,
         declared_value: declaredValue ? parseFloat(declaredValue) : undefined,
@@ -324,11 +324,23 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
   const onTimeChange = (event: any, selectedTime?: Date) => {
     setShowTimePicker(false);
-    if (selectedTime) {
+    if (selectedTime && expectedPickupDate) {
       const updatedDateTime = new Date(expectedPickupDate);
       updatedDateTime.setHours(selectedTime.getHours());
       updatedDateTime.setMinutes(selectedTime.getMinutes());
       setExpectedPickupDate(updatedDateTime);
+    }
+  };
+
+  const onSelectPickupAddress = (addressId: string) => {
+    setSelectedPickupAddress(addressId);
+    // prefill pickup POC info based on selected address if needed
+    const address = addresses.find(addr => addr.id === addressId);
+    if (address) {
+      const contact_info = address.contact_info || '';
+      const [poc_name, poc_number] = contact_info.split(' - '); // Assuming 'Name - Number' format
+      setPickupPocName(poc_name || '');
+      setPickupPocNumber(poc_number || '');
     }
   };
 
@@ -409,7 +421,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                 required={true}
                 data={addresses}
                 value={selectedPickupAddress}
-                onSelect={setSelectedPickupAddress}
+                onSelect={onSelectPickupAddress}
                 displayField={(address: Address) => `${address.address_line_1}, ${address.city}`}
                 searchFields={(address: Address) => [
                   address.address_line_1,
@@ -525,32 +537,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
               <View style={{ flexDirection: 'row', marginBottom: theme.spacing.md }}>
                 <View style={[styles.formGroup, { flex: 1, marginRight: theme.spacing.sm, marginBottom: 0 }]}>
                   <Text style={styles.formLabel}>
-                    Boxes {isPerShipmentContract && <Text style={styles.requiredAsterisk}>*</Text>}
-                  </Text>
-                  <View style={styles.counterContainer}>
-                    <TouchableOpacity 
-                      style={styles.counterButton}
-                      onPress={() => setNumberOfBoxes(String(Math.max(0, parseInt(numberOfBoxes) - 1)))}
-                    >
-                      <Feather name="minus" size={20} color={theme.colors.text.primary} />
-                    </TouchableOpacity>
-                    <TextInput
-                      style={styles.counterInput}
-                      value={numberOfBoxes}
-                      onChangeText={setNumberOfBoxes}
-                      keyboardType="numeric"
-                    />
-                    <TouchableOpacity 
-                      style={styles.counterButton}
-                      onPress={() => setNumberOfBoxes(String(parseInt(numberOfBoxes) + 1))}
-                    >
-                      <Feather name="plus" size={20} color={theme.colors.text.primary} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing.sm, marginBottom: 0 }]}>
-                  <Text style={styles.formLabel}>
                     Invoices {isPerShipmentContract && <Text style={styles.requiredAsterisk}>*</Text>}
                   </Text>
                   <View style={styles.counterContainer}>
@@ -569,6 +555,32 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                     <TouchableOpacity 
                       style={styles.counterButton}
                       onPress={() => setNumberOfInvoices(String(parseInt(numberOfInvoices) + 1))}
+                    >
+                      <Feather name="plus" size={20} color={theme.colors.text.primary} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing.sm, marginBottom: 0 }]}>
+                  <Text style={styles.formLabel}>
+                    Boxes {isPerShipmentContract && <Text style={styles.requiredAsterisk}>*</Text>}
+                  </Text>
+                  <View style={styles.counterContainer}>
+                    <TouchableOpacity 
+                      style={styles.counterButton}
+                      onPress={() => setNumberOfBoxes(String(Math.max(0, parseInt(numberOfBoxes) - 1)))}
+                    >
+                      <Feather name="minus" size={20} color={theme.colors.text.primary} />
+                    </TouchableOpacity>
+                    <TextInput
+                      style={styles.counterInput}
+                      value={numberOfBoxes}
+                      onChangeText={setNumberOfBoxes}
+                      keyboardType="numeric"
+                    />
+                    <TouchableOpacity 
+                      style={styles.counterButton}
+                      onPress={() => setNumberOfBoxes(String(parseInt(numberOfBoxes) + 1))}
                     >
                       <Feather name="plus" size={20} color={theme.colors.text.primary} />
                     </TouchableOpacity>
@@ -606,16 +618,18 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                 >
                   <MaterialIcons name="calendar-today" size={20} color={theme.colors.text.secondary} />
                   <Text style={styles.datePickerText}>
-                    {expectedPickupDate.toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })} at {expectedPickupDate.toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true,
-                    })}
+                    {expectedPickupDate
+                      ? `${expectedPickupDate.toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })} at ${expectedPickupDate.toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true,
+                        })}`
+                      : 'Select date & time'}
                   </Text>
                   <Feather name="chevron-down" size={16} color={theme.colors.text.tertiary} />
                 </TouchableOpacity>
@@ -623,7 +637,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
               {showDatePicker && (
                 <DateTimePicker
-                  value={expectedPickupDate}
+                  value={expectedPickupDate ?? new Date()}
                   mode="date"
                   display="default"
                   onChange={onDateChange}
@@ -633,7 +647,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
               {showTimePicker && (
                 <DateTimePicker
-                  value={expectedPickupDate}
+                  value={expectedPickupDate ?? new Date()}
                   mode="time"
                   display="default"
                   onChange={onTimeChange}
