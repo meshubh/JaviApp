@@ -4,6 +4,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -38,6 +39,7 @@ interface OrderDetailsScreenProps {
 }
 
 const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { orderId } = route.params;
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -136,7 +138,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
 
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Status Timeline</Text>
+        <Text style={styles.sectionTitle}>{t('orderDetails.statusTimeline.value')}</Text>
         {order.status_timeline.map((item, index) => (
           <View key={index} style={styles.timelineItem}>
             <View style={styles.timelineIndicator}>
@@ -149,7 +151,9 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
               )}
             </View>
             <View style={styles.timelineContent}>
-              <Text style={styles.timelineStatus}>{item.status}</Text>
+              <Text style={styles.timelineStatus}>
+                {t('statuses.'+ item.status .toLowerCase().replace(/ /g, '') + '.value')}
+              </Text>
               <Text style={styles.timelineDate}>
                 {orderService.formatDateTime(item.changed_at)}
               </Text>
@@ -168,7 +172,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
 
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Latest Tracking</Text>
+        <Text style={styles.sectionTitle}>{t('orderDetails.latestTracking.value')}</Text>
         <View style={styles.trackingCard}>
           <View style={styles.trackingHeader}>
             <MaterialIcons name="location-on" size={20} color={theme.colors.primary.main} />
@@ -192,7 +196,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
                 }
               }}
             >
-              <Text style={styles.mapButtonText}>View on Map</Text>
+              <Text style={styles.mapButtonText}>{t('orderDetails.viewOnMap.value')}</Text>
               <Feather name="external-link" size={14} color={theme.colors.primary.main} />
             </TouchableOpacity>
           )}
@@ -206,7 +210,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.secondary.main} />
-          <Text style={styles.loadingText}>Loading order details...</Text>
+          <Text style={styles.loadingText}>{t('orderDetails.loadingOrder.value')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -217,12 +221,12 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <MaterialIcons name="error-outline" size={48} color={theme.colors.semantic.error} />
-          <Text style={styles.errorText}>Order not found</Text>
+          <Text style={styles.errorText}>{t('orderDetails.orderNotFound.value')}</Text>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backButtonText}>Go Back</Text>
+            <Text style={styles.backButtonText}>{t('orderDetails.goBack.value')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -239,7 +243,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
         {/* Header */}
         <CustomHeader
           navigation={navigation}
-          title={`Order #${order.order_number}`}
+          title={`${t('orders.orderNumber.value')} #${order.order_number}`}
           showBack={true}
           showMenu={false}
         />
@@ -265,16 +269,16 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
                 color={statusColor} 
               />
               <Text style={[styles.statusText, { color: statusColor }]}>
-                {order.status}
+                {t('statuses.'+ order.status .toLowerCase().replace(/ /g, '') + '.value')}
               </Text>
             </View>
             <Text style={styles.statusDate}>
-              Created on {orderService.formatDateTime(order.created_at)}
+               {t('orderDetails.createdOn.value') + ' ' + orderService.formatDateTime(order.created_at)}
             </Text>
             {order.is_overdue && (
               <View style={styles.overdueAlert}>
                 <MaterialIcons name="warning" size={16} color={Colors.text.warning} />
-                <Text style={styles.overdueText}>This order is overdue</Text>
+                <Text style={styles.overdueText}>{t('orderDetails.orderOverdue.value')}</Text>
               </View>
             )}
           </View>
@@ -290,9 +294,9 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
 
           {/* Package Information */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Package Information</Text>
+            <Text style={styles.sectionTitle}>{t('orderDetails.packageInformation.value')}</Text>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Packages:</Text>
+              <Text style={styles.infoLabel}>{t('orderDetails.packages.value')}:</Text>
               <Text style={styles.infoValue}>
                 {order.number_of_boxes > 0 && `${order.number_of_boxes} box${order.number_of_boxes > 1 ? 'es' : ''}`}
                 {order.number_of_boxes > 0 && order.number_of_invoices > 0 && ', '}
@@ -301,7 +305,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
             </View>
             {order.package_description && (
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Description:</Text>
+                <Text style={styles.infoLabel}>{t('orderDetails.description.value')}:</Text>
                 <Text style={styles.infoValue}>{order.package_description}</Text>
               </View>
             )}
@@ -309,11 +313,11 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
 
           {/* Addresses */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pickup Address</Text>
+            <Text style={styles.sectionTitle}>{t('orderDetails.pickupAddress.value')}</Text>
             <View style={styles.addressCard}>
               <View style={styles.addressHeader}>
                 <Feather name="map-pin" size={16} color={theme.colors.primary.main} />
-                <Text style={styles.addressTitle}>Pickup Location</Text>
+                <Text style={styles.addressTitle}>{t('orderDetails.pickupLocation.value')}</Text>
               </View>
               <Text style={styles.addressText}>
                 {order.pickup_address.address_line_1}
@@ -346,7 +350,7 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
                     `${order.pickup_address.address_line_1}, ${order.pickup_address.city}`)}
                 >
                   <MaterialIcons name="directions" size={16} color={theme.colors.primary.main} />
-                  <Text style={styles.mapLinkText}>Get Directions</Text>
+                  <Text style={styles.mapLinkText}>{t('orderDetails.getDirections.value')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -354,11 +358,11 @@ const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ navigation, rou
             {/* Drop Address - Only show for distance/km based contracts */}
             {showDropLocation && (
               <>
-                <Text style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>Drop Address</Text>
+                <Text style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>{t('orderDetails.dropAddress.value')}</Text>
                 <View style={styles.addressCard}>
                   <View style={styles.addressHeader}>
                     <Feather name="map-pin" size={16} color={theme.colors.semantic.error} />
-                    <Text style={styles.addressTitle}>Drop Location</Text>
+                    <Text style={styles.addressTitle}>{t('orderDetails.dropLocation.value')}</Text>
                   </View>
                   <Text style={styles.addressText}>
                     {order.drop_address_text || 
@@ -391,7 +395,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
                         order.drop_address_text || `${order.drop_address.address_line_1}, ${order.drop_address.city}`)}
                     >
                       <MaterialIcons name="directions" size={16} color={theme.colors.primary.main} />
-                      <Text style={styles.mapLinkText}>Get Directions</Text>
+                      <Text style={styles.mapLinkText}>{t('orderDetails.getDirections.value')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -401,14 +405,14 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
 
           {/* Schedule */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Schedule</Text>
+            <Text style={styles.sectionTitle}>{t('orderDetails.schedule.value')}</Text>
             {order.expected_pickup_date && (
               <View style={styles.scheduleItem}>
                 <View style={styles.scheduleIcon}>
                   <MaterialIcons name="schedule" size={20} color={theme.colors.primary.main} />
                 </View>
                 <View style={styles.scheduleContent}>
-                  <Text style={styles.scheduleLabel}>Expected Pickup</Text>
+                  <Text style={styles.scheduleLabel}>{t('orderDetails.expectedPickup.value')}</Text>
                   <Text style={styles.scheduleDate}>
                     {orderService.formatDateTime(order.expected_pickup_date)}
                   </Text>
@@ -421,7 +425,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
                   <MaterialIcons name="local-shipping" size={20} color={Colors.primary.blue} />
                 </View>
                 <View style={styles.scheduleContent}>
-                  <Text style={styles.scheduleLabel}>Expected Delivery</Text>
+                  <Text style={styles.scheduleLabel}>{t('orderDetails.expectedDelivery.value')}</Text>
                   <Text style={styles.scheduleDate}>
                     {orderService.formatDateTime(order.expected_delivery_date)}
                   </Text>
@@ -434,7 +438,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
                   <MaterialIcons name="check-circle" size={20} color={theme.colors.primary.main} />
                 </View>
                 <View style={styles.scheduleContent}>
-                  <Text style={styles.scheduleLabel}>Actual Pickup</Text>
+                  <Text style={styles.scheduleLabel}>{t('orderDetails.actualPickup.value')}</Text>
                   <Text style={styles.scheduleDate}>
                     {orderService.formatDateTime(order.pickup_completed_at)}
                   </Text>
@@ -447,7 +451,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
                   <MaterialIcons name="done-all" size={20} color={theme.colors.primary.main} />
                 </View>
                 <View style={styles.scheduleContent}>
-                  <Text style={styles.scheduleLabel}>Delivered</Text>
+                  <Text style={styles.scheduleLabel}>{t('orderDetails.delivered.value')}</Text>
                   <Text style={styles.scheduleDate}>
                     {orderService.formatDateTime(order.delivery_completed_at)}
                   </Text>
@@ -458,22 +462,22 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
 
           {/* Payment Information */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Payment Information</Text>
+            <Text style={styles.sectionTitle}>{t('orderDetails.paymentInformation.value')}</Text>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Payment Mode:</Text>
+              <Text style={styles.infoLabel}>{t('orderDetails.paymentMode.value')}</Text>
               <Text style={styles.infoValue}>{order.payment_mode}</Text>
             </View>
             {order.order_amount && (
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Order Amount:</Text>
-                <Text style={[styles.infoValue, styles.amountText]}>TBC</Text>
+                <Text style={styles.infoLabel}>{t('orderDetails.orderAmount.value')}:</Text>
+                <Text style={[styles.infoValue, styles.amountText]}>{t('orderDetails.tbc.value')}</Text>
               </View>
             )}
             {order.cod_amount && (
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>COD Amount:</Text>
+                <Text style={styles.infoLabel}>{t('orderDetails.codAmount.value')}:</Text>
                 {/* <Text style={[styles.infoValue, styles.amountText]}>₹{order.cod_amount}</Text> */}
-                <Text style={[styles.infoValue, styles.amountText]}>TBC</Text>
+                <Text style={[styles.infoValue, styles.amountText]}>{t('orderDetails.tbc.value')}</Text>
               </View>
             )}
           </View>
@@ -481,7 +485,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
           {/* Special Instructions */}
           {order.special_instructions && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Special Instructions</Text>
+              <Text style={styles.sectionTitle}>{t('orderDetails.specialInstructions.value')}</Text>
               <Text style={styles.instructionsText}>{order.special_instructions}</Text>
             </View>
           )}
@@ -489,7 +493,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
           {/* Contact Information */}
           {(order.customer_phone || order.customer_email) && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Contact Information</Text>
+              <Text style={styles.sectionTitle}>{t('orderDetails.contactInformation.value')}</Text>
               {order.customer_phone && (
                 <TouchableOpacity
                   style={styles.contactRow}
@@ -525,7 +529,7 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
                 onPress={handleCancelOrder}
               >
                 <MaterialIcons name="cancel" size={20} color={theme.colors.text.inverse} />
-                <Text style={styles.cancelOrderButtonText}>Cancel Order</Text>
+                <Text style={styles.cancelOrderButtonText}>{t('orderDetails.cancelOrderButton.value')}</Text>
               </TouchableOpacity>
             </View>
           )}

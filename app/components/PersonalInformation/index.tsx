@@ -1,6 +1,7 @@
 // app/screens/PersonalInformation/index.tsx
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -16,6 +17,7 @@ import { usePersonalInformationStyles } from './personalInformation.styles';
 
 const PersonalInformation: React.FC = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = usePersonalInformationStyles(theme);
 
   const [profile, setProfile] = useState<ClientProfile | null>(null);
@@ -43,27 +45,26 @@ const PersonalInformation: React.FC = () => {
       });
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      Alert.alert('Error', 'Failed to load profile information');
+      Alert.alert(t('common.error.value'), t('personalInfo.failedToLoad.value'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleSave = async () => {
-    // Validate form data
     if (!formData.poc_name || !formData.poc_number || !formData.poc_email) {
-      Alert.alert('Validation Error', 'Please fill in all required fields');
+      Alert.alert(t('addresses.validationError.value'), t('personalInfo.allFieldsRequired.value'));
       return;
     }
 
     if (!profileService.validatePhone(formData.poc_number)) {
-      Alert.alert('Validation Error', 'Please enter a valid phone number');
+      Alert.alert(t('addresses.validationError.value'), t('personalInfo.invalidPhone.value'));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.poc_email)) {
-      Alert.alert('Validation Error', 'Please enter a valid email address');
+      Alert.alert(t('addresses.validationError.value'), t('personalInfo.invalidEmail.value'));
       return;
     }
 
@@ -72,10 +73,10 @@ const PersonalInformation: React.FC = () => {
       const updatedProfile = await profileService.updateClientProfile(formData);
       setProfile(updatedProfile);
       setIsEditing(false);
-      Alert.alert('Success', 'Profile updated successfully');
+      Alert.alert(t('common.success.value'), t('personalInfo.profileUpdated.value'));
     } catch (error) {
       console.error('Failed to update profile:', error);
-      Alert.alert('Error', 'Failed to update profile');
+      Alert.alert(t('common.error.value'), t('personalInfo.failedToUpdate.value'));
     } finally {
       setSaving(false);
     }
@@ -100,7 +101,7 @@ const PersonalInformation: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary.main} />
-          <Text style={styles.loadingText}>Loading profile...</Text>
+          <Text style={styles.loadingText}>{t('personalInfo.loadingProfile.value')}</Text>
         </View>
       </View>
     );
@@ -111,9 +112,9 @@ const PersonalInformation: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.errorContainer}>
           <MaterialIcons name="error-outline" size={48} color={theme.colors.text.tertiary} />
-          <Text style={styles.errorText}>Failed to load profile</Text>
+          <Text style={styles.errorText}>{t('personalInfo.failedToLoad.value')}</Text>
           <TouchableOpacity onPress={fetchProfile} style={styles.retryButton}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Text style={styles.retryButtonText}>{t('common.retry.value')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -123,7 +124,7 @@ const PersonalInformation: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Personal Information</Text>
+        <Text style={styles.headerTitle}>{t('personalInfo.title.value')}</Text>
         {/* {!isEditing ? (
           <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editButton}>
             <Feather name="edit-2" size={20} color={theme.colors.primary.main} />
@@ -136,32 +137,32 @@ const PersonalInformation: React.FC = () => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Company Information (Read-only) */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Company Information</Text>
+          <Text style={styles.sectionTitle}>{t('personalInfo.companyInfo.value')}</Text>
           
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Firm Name</Text>
+              <Text style={styles.label}>{t('personalInfo.firmName.value')}</Text>
               <Text style={styles.value}>{profile.firm_name}</Text>
             </View>
             
             <View style={styles.divider} />
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>GST Number</Text>
+              <Text style={styles.label}>{t('personalInfo.gstNumber.value')}</Text>
               <Text style={styles.value}>{profile.gst_number}</Text>
             </View>
             
             <View style={styles.divider} />
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Client ID</Text>
+              <Text style={styles.label}>{t('personalInfo.clientId.value')}</Text>
               <Text style={styles.value}>{profile.client_id}</Text>
             </View>
             
             <View style={styles.divider} />
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Status</Text>
+              <Text style={styles.label}>{t('personalInfo.status.value')}</Text>
               <View style={styles.statusBadge}>
                 <Text style={styles.statusText}>{profile.status}</Text>
               </View>
@@ -169,20 +170,19 @@ const PersonalInformation: React.FC = () => {
           </View>
         </View>
 
-        {/* Contact Information (Editable) */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
+          <Text style={styles.sectionTitle}>{t('personalInfo.contactInfo.value')}</Text>
           
           <View style={styles.formCard}>
             <View style={styles.formGroup}>
               <Text style={styles.inputLabel}>
-                Contact Person Name <Text style={styles.required}>*</Text>
+                {t('personalInfo.contactPersonName.value')} <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
                 style={[styles.input, !isEditing && styles.inputDisabled]}
                 value={formData.poc_name}
                 onChangeText={(text) => setFormData({ ...formData, poc_name: text })}
-                placeholder="Enter contact person name"
+                placeholder={t('personalInfo.contactPersonName.value')}
                 placeholderTextColor={theme.colors.text.tertiary}
                 editable={isEditing}
               />
@@ -190,13 +190,13 @@ const PersonalInformation: React.FC = () => {
 
             <View style={styles.formGroup}>
               <Text style={styles.inputLabel}>
-                Phone Number <Text style={styles.required}>*</Text>
+                {t('personalInfo.phoneNumber.value')} <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
                 style={[styles.input, !isEditing && styles.inputDisabled]}
                 value={formData.poc_number}
                 onChangeText={(text) => setFormData({ ...formData, poc_number: text })}
-                placeholder="Enter phone number"
+                placeholder={t('personalInfo.phoneNumber.value')}
                 placeholderTextColor={theme.colors.text.tertiary}
                 keyboardType="phone-pad"
                 editable={isEditing}
@@ -205,13 +205,13 @@ const PersonalInformation: React.FC = () => {
 
             <View style={styles.formGroup}>
               <Text style={styles.inputLabel}>
-                Email Address <Text style={styles.required}>*</Text>
+                {t('personalInfo.emailAddress.value')} <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
                 style={[styles.input, !isEditing && styles.inputDisabled]}
                 value={formData.poc_email}
                 onChangeText={(text) => setFormData({ ...formData, poc_email: text })}
-                placeholder="Enter email address"
+                placeholder={t('personalInfo.emailAddress.value')}
                 placeholderTextColor={theme.colors.text.tertiary}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -221,30 +221,29 @@ const PersonalInformation: React.FC = () => {
           </View>
         </View>
 
-        {/* Business Details (Editable) */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Business Details</Text>
+          <Text style={styles.sectionTitle}>{t('personalInfo.businessDetails.value')}</Text>
           
           <View style={styles.formCard}>
             <View style={styles.formGroup}>
-              <Text style={styles.inputLabel}>Business Type</Text>
+              <Text style={styles.inputLabel}>{t('personalInfo.businessType.value')}</Text>
               <TextInput
                 style={[styles.input, !isEditing && styles.inputDisabled]}
                 value={formData.business_type || ''}
                 onChangeText={(text) => setFormData({ ...formData, business_type: text })}
-                placeholder="Enter business type"
+                placeholder={t('personalInfo.businessType.value')}
                 placeholderTextColor={theme.colors.text.tertiary}
                 editable={isEditing}
               />
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.inputLabel}>Industry Sector</Text>
+              <Text style={styles.inputLabel}>{t('personalInfo.industrySector.value')}</Text>
               <TextInput
                 style={[styles.input, !isEditing && styles.inputDisabled]}
                 value={formData.industry_sector || ''}
                 onChangeText={(text) => setFormData({ ...formData, industry_sector: text })}
-                placeholder="Enter industry sector"
+                placeholder={t('personalInfo.industrySector.value')}
                 placeholderTextColor={theme.colors.text.tertiary}
                 editable={isEditing}
               />
@@ -303,7 +302,7 @@ const PersonalInformation: React.FC = () => {
               onPress={handleCancel}
               disabled={saving}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>{t('common.cancel.value')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -316,7 +315,7 @@ const PersonalInformation: React.FC = () => {
               ) : (
                 <>
                   <Feather name="save" size={18} color={theme.colors.text.onPrimary} />
-                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                  <Text style={styles.saveButtonText}>{t('personalInfo.saveChanges.value')}</Text>
                 </>
               )}
             </TouchableOpacity>

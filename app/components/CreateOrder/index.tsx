@@ -1,10 +1,11 @@
-// app/CreateOrder/index.tsx
+// app/components/CreateOrder/index.tsx
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -37,6 +38,7 @@ interface CreateOrderProps {
 const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   const { token } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = useCreateOrderStyles(theme);
   
   // Form state
@@ -75,7 +77,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   const [isPerKmContract, setIsPerKmContract] = useState(false);
   const [isPerShipmentContract, setIsPerShipmentContract] = useState(false);
 
-  // Use useFocusEffect to reload data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       console.log('[CreateOrder] Screen focused - loading fresh data');
@@ -88,7 +89,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     }, [])
   );
 
-  // Effect to handle contract selection changes
   useEffect(() => {
     if (selectedContract) {
       const contract = contracts.find(c => c.id === selectedContract);
@@ -103,7 +103,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
         setIsPerKmContract(isPKM);
         setIsPerShipmentContract(isPS);
         
-        // Reset relevant fields when contract changes
         if (!isPKM) {
           setDropAddressText('');
           setDropAddressId('');
@@ -112,7 +111,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
           setDropPocNumber('');
         }
         
-        // Prefill POC information from client data (you'll need to get this from your auth context or API)
         prefillPocInformation();
       }
     } else {
@@ -124,13 +122,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
   const prefillPocInformation = async () => {
     // You'll need to get client data from your auth context or make an API call
-    // For now, I'll show the structure - replace with actual client data
     try {
-      // const clientData = await orderService.getClientProfile(); // or get from auth context
-      // setPickupPocName(clientData.poc1_name || '');
-      // setPickupPocNumber(clientData.poc1_number || '');
-      
-      // Placeholder - replace with actual client data
       setPickupPocName(''); // Will be filled with client.poc1_name
       setPickupPocNumber(''); // Will be filled with client.poc1_number
     } catch (error) {
@@ -164,7 +156,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
       }
     } catch (error) {
       console.error('[CreateOrder] Error loading data:', error);
-      Alert.alert('Error', 'Failed to load contracts and addresses. Please try again.');
+      Alert.alert(t('common.error.value'), t('createOrder.failedToLoad.value'));
     } finally {
       setIsLoadingData(false);
     }
@@ -203,67 +195,65 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     const add = addresses.find(addr => addr.id === addressId);
     if (add) {
       const contact_info = add.contact_info || '';
-      const [poc_name, poc_number] = contact_info && contact_info.split(' - '); // Assuming 'Name - Number' format
+      const [poc_name, poc_number] = contact_info && contact_info.split(' - ');
       setDropAddressFirmName(add.firm_name || '');
       setDropPocName(poc_name || '');
       setDropPocNumber(poc_number || '');
     }
-  }, []);
+  }, [addresses]);
 
   const validateForm = (): boolean => {
     if (!selectedContract) {
-      Alert.alert('Validation Error', 'Please select a contract');
+      Alert.alert(t('createOrder.validationError.value'), t('createOrder.contractRequired.value'));
       return false;
     }
     
     if (!selectedPickupAddress) {
-      Alert.alert('Validation Error', 'Please select a pickup address');
+      Alert.alert(t('createOrder.validationError.value'), t('createOrder.pickupAddressRequired.value'));
       return false;
     }
 
     if (!pickupPocName) {
-      Alert.alert('Validation Error', 'Please enter pickup POC name');
+      Alert.alert(t('createOrder.validationError.value'), t('createOrder.pickupContactNameRequired.value'));
       return false;
     }
 
     if (!pickupPocNumber) {
-      Alert.alert('Validation Error', 'Please enter pickup POC number');
+      Alert.alert(t('createOrder.validationError.value'), t('createOrder.pickupContactNumberRequired.value'));
       return false;
     }
 
-    // Per KM contract validations
     if (isPerKmContract) {
       if (!dropAddressText) {
-        Alert.alert('Validation Error', 'Please select a drop address for Per KM contracts');
+        Alert.alert(t('createOrder.validationError.value'), t('createOrder.dropAddressRequired.value'));
         return false;
       }
       if (!dropPocName) {
-        Alert.alert('Validation Error', 'Please enter drop POC name for Per KM contracts');
+        Alert.alert(t('createOrder.validationError.value'), t('createOrder.dropContactNameRequired.value'));
         return false;
       }
       if (!dropPocNumber) {
-        Alert.alert('Validation Error', 'Please enter drop POC number for Per KM contracts');
+        Alert.alert(t('createOrder.validationError.value'), t('createOrder.dropContactNumberRequired.value'));
         return false;
       }
     }
 
-    // Per Shipment contract validations
     if (isPerShipmentContract) {
       const boxes = parseInt(numberOfBoxes) || 0;
       const invoices = parseInt(numberOfInvoices) || 0;
       
       if (boxes === 0) {
-        Alert.alert('Validation Error', 'Number of boxes is mandatory for Per Shipment contracts');
+        Alert.alert(t('createOrder.validationError.value'), t('createOrder.boxesRequired.value'));
         return false;
       }
       if (invoices === 0) {
-        Alert.alert('Validation Error', 'Number of invoices is mandatory for Per Shipment contracts');
+        Alert.alert(t('createOrder.validationError.value'), t('createOrder.invoicesRequired.value'));
         return false;
       }
     }
     
     if (expectedPickupDate && expectedPickupDate < new Date()) {
-      Alert.alert('Validation Error', 'Pickup date must be in the future');
+      Alert.alert(t('createOrder.validationError.value'), t('createOrder.futurePickupDate.value'));
       return false;
     }
     
@@ -299,15 +289,15 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
       const createdOrder = await orderService.createOrder(orderData);
       
       Alert.alert(
-        'Success',
-        `Order #${createdOrder.order_number} created successfully!`,
+        t('common.success.value'),
+        `${t('orders.orderNumber.value')} #${createdOrder.order_number} ${t('createOrder.orderCreatedSuccess.value')}`,
         [
           {
-            text: 'View Order',
+            text: t('createOrder.viewOrder.value'),
             onPress: () => navigation.navigate('ViewOrders', { orderId: createdOrder.id }),
           },
           {
-            text: 'Create Another',
+            text: t('createOrder.createAnother.value'),
             style: 'cancel',
             onPress: () => {
               resetFormFields();
@@ -319,8 +309,8 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     } catch (error: any) {
       console.error('Error creating order:', error);
       Alert.alert(
-        'Error',
-        error.message || 'Failed to create order. Please try again.'
+        t('common.error.value'),
+        error.message || t('createOrder.failedToCreate.value')
       );
     } finally {
       setIsLoading(false);
@@ -330,9 +320,8 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   const onDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      // Set default time to 6 PM (18:00)
       const dateWithDefaultTime = new Date(selectedDate);
-      dateWithDefaultTime.setHours(18, 0, 0, 0); // 6 PM, 0 minutes, 0 seconds, 0 milliseconds
+      dateWithDefaultTime.setHours(18, 0, 0, 0);
       
       setExpectedPickupDate(dateWithDefaultTime);
       setShowTimePicker(true);
@@ -351,11 +340,10 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
   const onSelectPickupAddress = (addressId: string) => {
     setSelectedPickupAddress(addressId);
-    // prefill pickup POC info based on selected address if needed
     const address = addresses.find(addr => addr.id === addressId);
     if (address) {
       const contact_info = address.contact_info || '';
-      const [poc_name, poc_number] = contact_info && contact_info.split(' - '); // Assuming 'Name - Number' format
+      const [poc_name, poc_number] = contact_info && contact_info.split(' - ');
       setPickupPocName(poc_name || '');
       setPickupPocNumber(poc_number || '');
     }
@@ -366,7 +354,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary.main} />
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={styles.loadingText}>{t('common.loading.value')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -376,10 +364,9 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     <>
       <StatusBar backgroundColor={theme.colors.primary.main} barStyle="dark-content" />
       <SafeAreaView style={styles.container}>
-        {/* Header */}
         <CustomHeader
           navigation={navigation}
-          title="Create Order"
+          title={t('createOrder.title.value')}
           showBack={false}
           showMenu={false}
         />
@@ -395,11 +382,10 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
           >
             {/* Contract and Address Selection */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Contract & Pickup Details</Text>
+              <Text style={styles.sectionTitle}>{t('createOrder.contractDetails.value')}</Text>
               
-              {/* Contract Searchable Dropdown */}
               <SearchableDropdown
-                label="Contract"
+                label={t('createOrder.contract.value')}
                 required={true}
                 data={contracts}
                 value={selectedContract}
@@ -411,7 +397,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                   contract.status,
                 ]}
                 keyExtractor={(contract: Contract) => contract.id}
-                placeholder="Select a contract"
+                placeholder={t('createOrder.selectContract.value')}
                 renderItem={(contract: Contract, isSelected: boolean) => (
                   <View style={{ flex: 1 }}>
                     <Text style={{
@@ -434,7 +420,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
               {/* Pickup Address Searchable Dropdown */}
               <SearchableDropdown
-                label="Pickup Address"
+                label={t('createOrder.pickupAddress.value')}
                 required={true}
                 data={addresses}
                 value={selectedPickupAddress}
@@ -448,7 +434,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                   address.pincode,
                 ]}
                 keyExtractor={(address: Address) => address.id}
-                placeholder="Select a pickup address"
+                placeholder={t('createOrder.selectPickupAddress.value')}
                 renderItem={(address: Address, isSelected: boolean) => (
                   <View style={{ flex: 1 }}>
                     <Text style={{
@@ -472,27 +458,26 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
               {/* Drop Address - Only for Per KM contracts */}
               {isPerKmContract && (
                 <GoogleAddressSearchable
-                  label="Drop Address"
+                  label={t('createOrder.dropAddress.value')}
                   required={true}
                   value={dropAddressText}
                   onSelect={handleDropAddressSelect}
-                  placeholder="Search for drop address"
+                  placeholder={t('createOrder.searchDropAddress.value')}
                 />
               )}
             </View>
 
             {/* POC Information */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Point of Contact Information</Text>
+              <Text style={styles.sectionTitle}>{t('createOrder.pocInformation.value')}</Text>
               
-              {/* Pickup POC - Always visible */}
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>
-                  Pickup Contact Person Name <Text style={styles.requiredAsterisk}>*</Text>
+                  {t('createOrder.pickupContactName.value')} <Text style={styles.requiredAsterisk}>*</Text>
                 </Text>
                 <TextInput
                   style={styles.formInput}
-                  placeholder="Enter pickup contact person name"
+                  placeholder={t('createOrder.pickupContactName.value')}
                   placeholderTextColor={theme.colors.text.tertiary}
                   value={pickupPocName}
                   onChangeText={setPickupPocName}
@@ -501,11 +486,11 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>
-                  Pickup Contact Person Number <Text style={styles.requiredAsterisk}>*</Text>
+                  {t('createOrder.pickupContactNumber.value')} <Text style={styles.requiredAsterisk}>*</Text>
                 </Text>
                 <TextInput
                   style={styles.formInput}
-                  placeholder="Enter pickup contact person number"
+                  placeholder={t('createOrder.pickupContactNumber.value')}
                   placeholderTextColor={theme.colors.text.tertiary}
                   value={pickupPocNumber}
                   onChangeText={setPickupPocNumber}
@@ -513,16 +498,15 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                 />
               </View>
 
-              {/* Drop POC - Only for Per KM contracts */}
               {isPerKmContract && (
                 <>
                   <View style={styles.formGroup}>
                     <Text style={styles.formLabel}>
-                      Drop Address Firm Name <Text style={styles.requiredAsterisk}>*</Text>
+                      {t('createOrder.dropFirmName.value')} <Text style={styles.requiredAsterisk}>*</Text>
                     </Text>
                     <TextInput
                       style={styles.formInput}
-                      placeholder="Enter drop address firm name"
+                      placeholder={t('createOrder.dropFirmName.value')}
                       placeholderTextColor={theme.colors.text.tertiary}
                       value={dropAddressFirmName}
                       onChangeText={setDropAddressFirmName}
@@ -530,11 +514,11 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                   </View>
                   <View style={styles.formGroup}>
                     <Text style={styles.formLabel}>
-                      Drop Contact Person Name <Text style={styles.requiredAsterisk}>*</Text>
+                      {t('createOrder.dropContactName.value')} <Text style={styles.requiredAsterisk}>*</Text>
                     </Text>
                     <TextInput
                       style={styles.formInput}
-                      placeholder="Enter drop contact person name"
+                      placeholder={t('createOrder.dropContactName.value')}
                       placeholderTextColor={theme.colors.text.tertiary}
                       value={dropPocName}
                       onChangeText={setDropPocName}
@@ -543,11 +527,11 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
                   <View style={styles.formGroup}>
                     <Text style={styles.formLabel}>
-                      Drop Contact Person Number <Text style={styles.requiredAsterisk}>*</Text>
+                      {t('createOrder.dropContactNumber.value')} <Text style={styles.requiredAsterisk}>*</Text>
                     </Text>
                     <TextInput
                       style={styles.formInput}
-                      placeholder="Enter drop contact person number"
+                      placeholder={t('createOrder.dropContactNumber.value')}
                       placeholderTextColor={theme.colors.text.tertiary}
                       value={dropPocNumber}
                       onChangeText={setDropPocNumber}
@@ -560,13 +544,12 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
             {/* Package Details */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Package Information</Text>
+              <Text style={styles.sectionTitle}>{t('createOrder.packageInformation.value')}</Text>
               
-              {/* Boxes and Invoices row */}
               <View style={{ flexDirection: 'row', marginBottom: theme.spacing.md }}>
                 <View style={[styles.formGroup, { flex: 1, marginRight: theme.spacing.sm, marginBottom: 0 }]}>
                   <Text style={styles.formLabel}>
-                    Invoices {isPerShipmentContract && <Text style={styles.requiredAsterisk}>*</Text>}
+                    {t('createOrder.invoices.value')} {isPerShipmentContract && <Text style={styles.requiredAsterisk}>*</Text>}
                   </Text>
                   <View style={styles.counterContainer}>
                     <TouchableOpacity 
@@ -592,7 +575,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
                 <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing.sm, marginBottom: 0 }]}>
                   <Text style={styles.formLabel}>
-                    Boxes {isPerShipmentContract && <Text style={styles.requiredAsterisk}>*</Text>}
+                    {t('createOrder.boxes.value')} {isPerShipmentContract && <Text style={styles.requiredAsterisk}>*</Text>}
                   </Text>
                   <View style={styles.counterContainer}>
                     <TouchableOpacity 
@@ -618,10 +601,10 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Package Description</Text>
+                <Text style={styles.formLabel}>{t('createOrder.packageDescription.value')}</Text>
                 <View style={[styles.formInput, styles.formInputMultiline]}>
                   <TextInput
-                    placeholder="Describe the package contents"
+                    placeholder={t('createOrder.packageDescriptionPlaceholder.value')}
                     placeholderTextColor={theme.colors.text.tertiary}
                     value={packageDescription}
                     onChangeText={setPackageDescription}
@@ -635,11 +618,11 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
             {/* Pickup Schedule */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Pickup Schedule</Text>
+              <Text style={styles.sectionTitle}>{t('createOrder.pickupSchedule.value')}</Text>
               
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>
-                  Expected Pickup Date & Time <Text style={styles.requiredAsterisk}>*</Text>
+                  {t('createOrder.expectedPickupDateTime.value')} <Text style={styles.requiredAsterisk}>*</Text>
                 </Text>
                 <TouchableOpacity 
                   style={styles.datePickerButton}
@@ -658,7 +641,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                           minute: '2-digit',
                           hour12: true,
                         })}`
-                      : 'Select date & time'}
+                      : t('createOrder.selectDateTime.value')}
                   </Text>
                   <Feather name="chevron-down" size={16} color={theme.colors.text.tertiary} />
                 </TouchableOpacity>
@@ -684,10 +667,10 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
               )}
 
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Special Instructions</Text>
+                <Text style={styles.formLabel}>{t('createOrder.specialInstructions.value')}</Text>
                 <View style={[styles.formInput, styles.formInputMultiline]}>
                   <TextInput
-                    placeholder="Any special handling instructions"
+                    placeholder={t('createOrder.specialInstructionsPlaceholder.value')}
                     placeholderTextColor={theme.colors.text.tertiary}
                     value={specialInstructions}
                     onChangeText={setSpecialInstructions}
@@ -699,7 +682,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Submit Buttons */}
+            {/* Submit Button */}
             <View style={styles.actionButtonsContainer}>
               <TouchableOpacity 
                 style={[
@@ -716,7 +699,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                 ) : (
                   <>
                     <MaterialIcons name="check-circle" size={20} color={theme.colors.text.onPrimary} />
-                    <Text style={styles.primaryActionButtonText}> Create Order</Text>
+                    <Text style={styles.primaryActionButtonText}> {t('createOrder.createOrderButton.value')}</Text>
                   </>
                 )}
               </TouchableOpacity>

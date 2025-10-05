@@ -2,12 +2,13 @@
 import { Feather } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-    Modal,
-    Platform,
-    Text,
-    TouchableOpacity,
-    View,
+  Modal,
+  Platform,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useTheme } from '../../../theme/themeContext';
 import { useDateRangePickerStyles } from './dateRangePicker.styles';
@@ -48,6 +49,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 }) => {
   const { theme } = useTheme();
   const styles = useDateRangePickerStyles(theme);
+  const { t } = useTranslation();
   
   const [tempRange, setTempRange] = useState<DateRange>(initialRange);
   const [showStartPicker, setShowStartPicker] = useState(false);
@@ -137,7 +139,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Select Date Range</Text>
+            <Text style={styles.headerTitle}>{t('dateRangePicker.selectDateRange.value')}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Feather name="x" size={24} color={theme.colors.text.secondary} />
             </TouchableOpacity>
@@ -145,7 +147,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
           {/* Quick Ranges */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Quick Select</Text>
+            <Text style={styles.sectionTitle}>{t('dateRangePicker.quickSelect.value')}</Text>
             <View style={styles.quickRangesContainer}>
               {quickRanges.map((range) => (
                 <TouchableOpacity
@@ -162,7 +164,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                       selectedQuickRange === range.key && styles.quickRangeTextActive,
                     ]}
                   >
-                    {range.label}
+                    {t('dateRangePicker.' + range.label.toLowerCase().replace(/ /g, '') + '.value')}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -171,11 +173,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
           {/* Custom Date Selection */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Custom Range</Text>
+            <Text style={styles.sectionTitle}>{t('dateRangePicker.customRange.value')}</Text>
             
             {/* Start Date */}
             <View style={styles.dateInputContainer}>
-              <Text style={styles.dateLabel}>From</Text>
+              <Text style={styles.dateLabel}>{t('dateRangePicker.from.value')}</Text>
               <TouchableOpacity
                 style={styles.dateInput}
                 onPress={() => setShowStartPicker(true)}
@@ -223,7 +225,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
               style={styles.clearButton} 
               onPress={handleClear}
             >
-              <Text style={styles.clearButtonText}>Clear</Text>
+              <Text style={styles.clearButtonText}>{t('dateRangePicker.clear.value')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -238,7 +240,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 styles.applyButtonText,
                 !isValidRange && styles.applyButtonTextDisabled,
               ]}>
-                Apply Filter
+                {t('dateRangePicker.applyFilter.value')}
               </Text>
             </TouchableOpacity>
           </View>

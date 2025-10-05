@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet } from 'react-native';
 import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -20,12 +21,15 @@ import LoginScreen from './app/components/Login';
 import OrderDetailsScreen from './app/components/OrderDetails';
 import PasswordChangeDialog from './app/components/PasswordChangeDialog/index';
 import Profile from './app/components/Profile';
+import LanguageSelector from './app/components/Profile/LanguageSelector';
 import ViewOrders from './app/components/ViewOrders';
 import { authService } from './app/services/AuthService';
 
 // Import types and theme
 import { ThemeProvider, useTheme } from './app/theme/themeContext';
 import { RootStackParamList } from './app/types/navigation';
+
+import './app/locales';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
@@ -66,6 +70,7 @@ const PaymentsScreen: React.FC = () => {
 // Bottom Tab Navigator Component
 const BottomTabNavigator: React.FC = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Tab.Navigator
@@ -102,17 +107,17 @@ const BottomTabNavigator: React.FC = () => {
       <Tab.Screen 
         name="Home" 
         component={CreateOrder}
-        options={{ tabBarLabel: 'Home' }}
+        options={{ tabBarLabel: t('common.home.value') }}
       />
       <Tab.Screen 
         name="ViewOrders" 
         component={ViewOrders}
-        options={{ tabBarLabel: 'Orders' }}
+        options={{ tabBarLabel: t('common.orders.value') }}
       />
       <Tab.Screen 
         name="Profile" 
         component={Profile}
-        options={{ tabBarLabel: 'Account' }}
+        options={{ tabBarLabel: t('common.profile.value') }}
       />
     </Tab.Navigator>
   );
@@ -190,6 +195,10 @@ const AuthenticatedNavigator: React.FC = () => {
           options={{ 
             animation: 'slide_from_right'
           }}
+        />
+        <Stack.Screen
+          name="LanguageSelector"
+          component={LanguageSelector}
         />
       </Stack.Navigator>
       

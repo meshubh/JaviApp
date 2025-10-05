@@ -16,6 +16,7 @@ export type RootStackParamList = {
   Profile: undefined;
   Settings: undefined;
   Login: undefined;
+  LanguageSelector: undefined;
   Register: undefined;
 };
 

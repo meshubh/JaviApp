@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Camera } from 'expo-camera';
 import * as Location from 'expo-location';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -21,6 +22,7 @@ import { Colors } from '../../theme';
 import { useTheme } from '../../theme/themeContext';
 import { NavigationProp } from '../../types/navigation';
 import { useLoginStyles } from './login.styles';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -42,6 +44,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [showSignInWithAnother, setShowSignInWithAnother] = useState<boolean>(false);
   
   const { login } = useAuth();
+  const { t } = useTranslation();
   
   // Animation values
   const { theme } = useTheme();
@@ -130,17 +133,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   const handleLogin = async (): Promise<void> => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(t('common.error.value'), t('login.validationError.value'));
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      Alert.alert(t('common.error.value'), t('login.invalidEmail.value'));
       return;
     }
 
     if (!permissionsGranted) {
-      Alert.alert('Permissions Required', 'Please grant all permissions to continue');
+      Alert.alert(t('login.missingPermissions.value'), t('login.permissionsMessage.value'));
       requestPermissions();
       return;
     }
@@ -155,10 +158,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       await storeEmail(normalizedEmail);
       
     } catch (error: any) {
-      Alert.alert(
-        'Login Failed', 
-        error.message || 'Invalid credentials. Please try again.'
-      );
+      Alert.alert(t('login.loginFailed.value'), error.message || t('login.invalidCredentials.value'));
     } finally {
       setIsLoading(false);
     }
@@ -209,8 +209,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 <MaterialIcons name="local-shipping" size={50} color={theme.colors.primary.main} />
               </View>
             </View>
-            <Text style={styles.appTitle}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to continue to your account</Text>
+            <Text style={styles.appTitle}>{t('login.welcomeBack.value')}</Text>
+            <Text style={styles.subtitle}>{t('login.subtitle.value')}</Text>
           </View>
 
           {/* Form Section */}
@@ -221,7 +221,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 <Feather name="mail" size={20} color={theme.colors.text.secondary} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Email address"
+                  placeholder={t('login.emailPlaceholder.value')}
                   placeholderTextColor={Colors.text.tertiary}
                   value={email}
                   onChangeText={handleEmailChange}
@@ -249,7 +249,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 <Feather name="lock" size={20} color={theme.colors.text.secondary} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Password"
+                  placeholder={t('login.passwordPlaceholder.value')}
                   placeholderTextColor={Colors.text.tertiary}
                   value={password}
                   onChangeText={setPassword}
@@ -287,7 +287,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               {isLoading ? (
                 <ActivityIndicator color={theme.colors.text.inverse} />
               ) : (
-                <Text style={styles.loginButtonText}>Sign In</Text>
+                <Text style={styles.loginButtonText}>{t('login.signIn.value')}</Text>
               )}
             </TouchableOpacity>
 

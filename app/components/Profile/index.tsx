@@ -1,9 +1,10 @@
-// app/screens/Profile/index.tsx
+// app/components/Profile/index.tsx
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -21,7 +22,6 @@ import { ClientProfile, profileService } from '../../services/ProfileService';
 import { useTheme } from '../../theme/themeContext';
 import { RootStackParamList } from '../../types/navigation';
 import Addresses from '../Addresses/index';
-// import BankAccounts from '../BankAccounts/index';
 import { CustomHeader } from '../CustomHeader';
 import PasswordChangeDialog from '../PasswordChangeDialog/index';
 import PersonalInformation from '../PersonalInformation/index';
@@ -40,7 +40,7 @@ interface ProfileOption {
   title: string;
   subtitle?: string;
   value?: string;
-  action?: 'navigate' | 'logout' | 'modal' | 'password';
+  action?: 'navigate' | 'logout' | 'modal' | 'password' | 'language';
   isDanger?: boolean;
   modalComponent?: 'personal' | 'addresses' | 'bankAccounts';
 }
@@ -53,6 +53,7 @@ interface OrderStats {
 
 const Profile: React.FC<ProfileProps> = ({ navigation }) => {
   const { user, logout } = useAuth();
+  const { t, i18n } = useTranslation();
   const [orderStats, setOrderStats] = useState<OrderStats>({
     total_orders: 0,
     active_orders: 0,
@@ -103,12 +104,12 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
 
   const handleLogout = () => {
     Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
+      t('profile.logout.value'),
+      t('profile.logoutConfirm.value'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel.value'), style: 'cancel' },
         { 
-          text: 'Logout', 
+          text: t('profile.logout.value'), 
           style: 'destructive',
           onPress: async () => {
             await logout();
@@ -118,119 +119,88 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
     );
   };
 
-  // Commented out edit profile functionality
-  // const handleEditProfile = () => {
-  //   setModalContent('personal');
-  //   setModalVisible(true);
-  // };
-
   const handleModalOpen = (component: 'personal' | 'addresses' | 'bankAccounts') => {
     setModalContent(component);
     setModalVisible(true);
   };
 
+  const getLanguageDisplayName = () => {
+    return i18n.language === 'hi' ? 'हिन्दी' : 'English';
+  };
+
   const profileSections: { title: string; options: ProfileOption[] }[] = [
     {
-      title: 'Account',
+      title: t('profile.account.value'),
       options: [
         {
           icon: 'person',
           iconFamily: 'material',
-          title: 'Personal Information',
-          subtitle: 'View your profile details',
+          title: t('profile.personalInfo.value'),
+          subtitle: t('profile.personalInfoSubtitle.value'),
           action: 'modal',
           modalComponent: 'personal',
         },
         {
           icon: 'location-on',
           iconFamily: 'material',
-          title: 'Addresses',
-          subtitle: 'Manage delivery addresses',
+          title: t('profile.addresses.value'),
+          subtitle: t('profile.addressesSubtitle.value'),
           action: 'modal',
           modalComponent: 'addresses',
         },
         {
           icon: 'lock',
           iconFamily: 'material',
-          title: 'Change Password',
-          subtitle: 'Update your account password',
+          title: t('profile.changePassword.value'),
+          subtitle: t('profile.changePasswordSubtitle.value'),
           action: 'password',
         },
-        // Commented out bank accounts functionality
-        // {
-        //   icon: 'account-balance',
-        //   iconFamily: 'material',
-        //   title: 'Bank Accounts',
-        //   subtitle: 'Manage bank accounts',
-        //   action: 'modal',
-        //   modalComponent: 'bankAccounts',
-        // },
       ],
     },
-    // Commented out preferences section
-    // {
-    //   title: 'Preferences',
-    //   options: [
-    //     {
-    //       icon: 'notifications',
-    //       iconFamily: 'material',
-    //       title: 'Push Notifications',
-    //       hasToggle: true,
-    //       action: 'toggle',
-    //     },
-    //     {
-    //       icon: 'moon',
-    //       iconFamily: 'ionicons',
-    //       title: 'Dark Mode',
-    //       hasToggle: true,
-    //       action: 'toggle',
-    //     },
-    //     {
-    //       icon: 'language',
-    //       iconFamily: 'material',
-    //       title: 'Language',
-    //       value: 'English',
-    //       action: 'navigate',
-    //     },
-    //   ],
-    // },
     {
-      title: 'Support',
+      title: t('profile.support.value'),
       options: [
         {
           icon: 'help-circle',
           iconFamily: 'feather',
-          title: 'Help Center',
+          title: t('profile.helpCenter.value'),
           action: 'navigate',
         },
         {
           icon: 'message-circle',
           iconFamily: 'feather',
-          title: 'Contact Support',
-          subtitle: 'Get help from our team',
+          title: t('profile.contactSupport.value'),
+          subtitle: t('profile.contactSupportSubtitle.value'),
           action: 'navigate',
         },
         {
           icon: 'info',
           iconFamily: 'feather',
-          title: 'About',
+          title: t('profile.about.value'),
           action: 'navigate',
         },
         {
           icon: 'file-text',
           iconFamily: 'feather',
-          title: 'Terms & Privacy',
+          title: t('profile.termsPrivacy.value'),
           action: 'navigate',
         },
       ],
     },
     {
-      title: 'Actions',
+      title: t('profile.actions.value'),
       options: [
+        {
+          icon: 'language',
+          iconFamily: 'material',
+          title: t('profile.chooseLanguage.value'),
+          value: getLanguageDisplayName(),
+          action: 'language',
+        },
         {
           icon: 'log-out',
           iconFamily: 'feather',
-          title: 'Logout',
+          title: t('profile.logout.value'),
           isDanger: true,
           action: 'logout',
         },
@@ -267,6 +237,9 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
       case 'password':
         setShowPasswordDialog(true);
         break;
+      case 'language':
+        navigation.navigate('LanguageSelector' as any);
+        break;
       case 'navigate':
         Alert.alert(option.title, `${option.title} feature coming soon!`);
         break;
@@ -281,8 +254,6 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
         return <PersonalInformation />;
       case 'addresses':
         return <Addresses />;
-      // case 'bankAccounts':
-      //   return <BankAccounts />;
       default:
         return null;
     }
@@ -291,11 +262,9 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
   const getModalTitle = () => {
     switch (modalContent) {
       case 'personal':
-        return 'Personal Information';
+        return t('profile.personalInfo.value');
       case 'addresses':
-        return 'Addresses';
-      // case 'bankAccounts':
-      //   return 'Bank Accounts';
+        return t('profile.addresses.value');
       default:
         return '';
     }
@@ -305,10 +274,9 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
     <>
       <StatusBar backgroundColor={theme.colors.primary.main} barStyle="light-content" />
       <SafeAreaView style={styles.container}>
-        {/* Header */}
         <CustomHeader
           navigation={navigation}
-          title="Profile"
+          title={t('common.profile.value')}
           showBack={false}
           showMenu={false}
         />
@@ -330,12 +298,6 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
             </View>
             <Text style={styles.userName}>{user?.name || 'User Name'}</Text>
             <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
-            
-            {/* Commented out edit profile button */}
-            {/* <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
-              <Feather name="edit-2" size={16} color={theme.colors.primary.main} />
-              <Text style={styles.editButtonText}>Edit Profile</Text>
-            </TouchableOpacity> */}
 
             {/* Stats Row */}
             <View style={styles.statsRow}>
@@ -345,17 +307,17 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
                 <>
                   <View style={styles.statItem}>
                     <Text style={styles.statNumber}>{orderStats.total_orders}</Text>
-                    <Text style={styles.statLabel}>Orders</Text>
+                    <Text style={styles.statLabel}>{t('profile.orders.value')}</Text>
                   </View>
                   <View style={styles.statDivider} />
                   <View style={styles.statItem}>
                     <Text style={styles.statNumber}>{orderStats.active_orders}</Text>
-                    <Text style={styles.statLabel}>Active</Text>
+                    <Text style={styles.statLabel}>{t('profile.active.value')}</Text>
                   </View>
                   <View style={styles.statDivider} />
                   <View style={styles.statItem}>
                     <Text style={styles.statNumber}>{orderStats.delivered_orders}</Text>
-                    <Text style={styles.statLabel}>Completed</Text>
+                    <Text style={styles.statLabel}>{t('profile.completed.value')}</Text>
                   </View>
                 </>
               )}
@@ -367,7 +329,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
                 <View style={styles.statItem}>
                   <MaterialIcons name="payments" size={20} color={theme.colors.semantic.success} />
                   <Text style={styles.statNumber}>₹{profile.total_revenue || 0}</Text>
-                  <Text style={styles.statLabel}>Total Spent</Text>
+                  <Text style={styles.statLabel}>{t('profile.totalSpent.value')}</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
@@ -378,7 +340,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
                       year: 'numeric',
                     })}
                   </Text>
-                  <Text style={styles.statLabel}>Member Since</Text>
+                  <Text style={styles.statLabel}>{t('profile.memberSince.value')}</Text>
                 </View>
               </View>
             )}
@@ -462,7 +424,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
           visible={showPasswordDialog}
           onSuccess={() => {
             setShowPasswordDialog(false);
-            Alert.alert('Success', 'Password changed successfully!');
+            Alert.alert(t('common.success.value'), t('profile.passwordChangeSuccess.value'));
           }}
           onCancel={() => setShowPasswordDialog(false)}
         />

@@ -3,6 +3,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Animated,
@@ -44,6 +45,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const styles = useHomeStyles(theme);
+  const { t } = useTranslation();
   
   // State
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
@@ -149,7 +151,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const actionCards: ActionCard[] = [
     {
-      title: 'Create Order',
+      title:  t('home.createOrder.value'),
       subtitle: 'Start a new order',
       icon: 'add-shopping-cart',
       iconColor: theme.colors.primary.main,
@@ -157,7 +159,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       screen: 'CreateOrder',
     },
     {
-      title: 'Order History',
+      title: t('home.viewOrders.value'),
       subtitle: 'View past orders',
       icon: 'receipt-long',
       iconColor: theme.colors.secondary.main,
@@ -165,7 +167,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       screen: 'ViewOrders',
     },
     {
-      title: 'My Profile',
+      title: t('home.profile.value'),
       subtitle: 'Account settings',
       icon: 'account-circle',
       iconColor: theme.colors.primary.dark,
@@ -248,14 +250,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         >
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeText}>Hello,</Text>
+            <Text style={styles.welcomeText}>{t('home.welcome.value')}</Text>
             <Text style={styles.userName}>{user?.name || 'User'}</Text>
             <Text style={styles.dateText}>{formatDate()}</Text>
           </View>
 
           {/* Quick Actions */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <Text style={styles.sectionTitle}>{t('home.quickActions.value')}</Text>
             
             {actionCards.map((card, index) => (
               <Animated.View

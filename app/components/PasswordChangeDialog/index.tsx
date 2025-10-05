@@ -1,5 +1,6 @@
-// PasswordChangeDialog.tsx
+// app/components/PasswordChangeDialog/index.tsx
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -28,6 +29,7 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
   onCancel
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -39,29 +41,26 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
   const validateForm = (): boolean => {
     const newErrors: {[key: string]: string} = {};
 
-    // Check if all fields are filled
     if (!currentPassword.trim()) {
-      newErrors.currentPassword = 'Current password is required';
+      newErrors.currentPassword = t('passwordChange.currentPasswordRequired.value');
     }
 
     if (!newPassword.trim()) {
-      newErrors.newPassword = 'New password is required';
+      newErrors.newPassword = t('passwordChange.newPasswordRequired.value');
     } else if (newPassword.length < 8) {
-      newErrors.newPassword = 'Password must be at least 8 characters';
+      newErrors.newPassword = t('passwordChange.passwordMinLength.value');
     }
 
     if (!confirmPassword.trim()) {
-      newErrors.confirmPassword = 'Please confirm your new password';
+      newErrors.confirmPassword = t('passwordChange.confirmPasswordRequired.value');
     }
 
-    // Check if new passwords match
     if (newPassword && confirmPassword && newPassword !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('passwordChange.passwordsMustMatch.value');
     }
 
-    // Check if new password is different from current
     if (currentPassword && newPassword && currentPassword === newPassword) {
-      newErrors.newPassword = 'New password must be different from current password';
+      newErrors.newPassword = t('passwordChange.passwordsMustBeDifferent.value');
     }
 
     setErrors(newErrors);
@@ -82,19 +81,16 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
 
       // Show success message
       Alert.alert(
-        'Success',
-        'Your password has been changed successfully!',
+        t('common.success.value'),
+        t('passwordChange.successMessage.value'),
         [
           {
             text: 'OK',
             onPress: () => {
-              // Clear form
               setCurrentPassword('');
               setNewPassword('');
               setConfirmPassword('');
               setErrors({});
-              
-              // Call success callback
               onSuccess();
             }
           }
@@ -104,7 +100,7 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
     } catch (error: any) {
       console.error('Password change failed:', error);
       
-      let errorMessage = 'Failed to change password. Please try again.';
+      let errorMessage = t('passwordChange.failedToChange.value');
       
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
@@ -116,14 +112,13 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
         errorMessage = error.response.data.confirm_password[0];
       }
 
-      Alert.alert('Error', errorMessage);
+      Alert.alert(t('common.error.value'), errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    // Clear form when canceling
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
@@ -145,14 +140,13 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={styles.title}>Change Password</Text>
+              <Text style={styles.title}>{t('passwordChange.title.value')}</Text>
               <Text style={styles.subtitle}>
-                For security, please change your default password before continuing.
+                {t('passwordChange.subtitle.value')}
               </Text>
 
-              {/* Current Password */}
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Current Password</Text>
+                <Text style={styles.label}>{t('passwordChange.currentPassword.value')}</Text>
                 <TextInput
                   style={[
                     styles.input, 
@@ -161,7 +155,7 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
                   value={currentPassword}
                   onChangeText={setCurrentPassword}
                   secureTextEntry
-                  placeholder="Enter your current password"
+                  placeholder={t('passwordChange.currentPasswordPlaceholder.value')}
                   placeholderTextColor={theme.colors.text.tertiary}
                   autoCapitalize="none"
                   editable={!loading}
@@ -172,9 +166,8 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
                 )}
               </View>
 
-              {/* New Password */}
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>New Password</Text>
+                <Text style={styles.label}>{t('passwordChange.newPassword.value')}</Text>
                 <TextInput
                   style={[
                     styles.input, 
@@ -183,7 +176,7 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
                   value={newPassword}
                   onChangeText={setNewPassword}
                   secureTextEntry
-                  placeholder="Enter new password (min 8 characters)"
+                  placeholder={t('passwordChange.newPasswordPlaceholder.value')}
                   placeholderTextColor={theme.colors.text.tertiary}
                   autoCapitalize="none"
                   editable={!loading}
@@ -194,9 +187,8 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
                 )}
               </View>
 
-              {/* Confirm Password */}
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Confirm New Password</Text>
+                <Text style={styles.label}>{t('passwordChange.confirmPassword.value')}</Text>
                 <TextInput
                   style={[
                     styles.input, 
@@ -205,7 +197,7 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry
-                  placeholder="Confirm your new password"
+                  placeholder={t('passwordChange.confirmPasswordPlaceholder.value')}
                   placeholderTextColor={theme.colors.text.tertiary}
                   autoCapitalize="none"
                   editable={!loading}
@@ -216,7 +208,6 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
                 )}
               </View>
 
-              {/* Buttons */}
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={[
@@ -229,7 +220,7 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
                   accessibilityLabel="Cancel password change"
                   accessibilityRole="button"
                 >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                  <Text style={styles.cancelButtonText}>{t('common.cancel.value')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -249,7 +240,7 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
                       size="small" 
                     />
                   ) : (
-                    <Text style={styles.changeButtonText}>Change Password</Text>
+                    <Text style={styles.changeButtonText}>{t('passwordChange.changePasswordButton.value')}</Text>
                   )}
                 </TouchableOpacity>
               </View>

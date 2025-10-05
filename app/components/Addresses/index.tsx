@@ -1,6 +1,7 @@
 // app/screens/Addresses/index.tsx
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -25,6 +26,7 @@ import { useAddressesStyles } from './addresses.styles';
 
 const Addresses: React.FC = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = useAddressesStyles(theme);
   
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -34,8 +36,8 @@ const Addresses: React.FC = () => {
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [formData, setFormData] = useState<CreateAddressData>({
     address_type: 'Pickup',
-    name: '',  // NEW: Contact name
-    number: '', // NEW: Contact number
+    name: '',
+    number: '',
     address_line_1: '',
     address_line_2: '',
     city: '',
@@ -59,7 +61,7 @@ const Addresses: React.FC = () => {
       setAddresses(data);
     } catch (error) {
       console.error('Failed to fetch addresses:', error);
-      Alert.alert('Error', 'Failed to load addresses');
+      Alert.alert(t('common.error.value'), t('addresses.failedToLoad.value'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -69,44 +71,42 @@ const Addresses: React.FC = () => {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
     
-    // Required fields validation
     if (!formData.name?.trim()) {
-      errors.name = 'Contact name is required';
+      errors.name = t('addresses.contactNameRequired.value');
     }
     
     if (!formData.number?.trim()) {
-      errors.number = 'Contact number is required';
+      errors.number = t('addresses.contactNumberRequired.value');
     } else if (!/^[6-9]\d{9}$/.test(formData.number.trim())) {
-      errors.number = 'Invalid phone number (10 digits required)';
+      errors.number = t('createOrder.invalidPhone.value');
     }
     
     if (!formData.address_line_1?.trim()) {
-      errors.address_line_1 = 'Address line 1 is required';
+      errors.address_line_1 = t('addresses.addressLine1Required.value');
     }
     
     if (!formData.city?.trim()) {
-      errors.city = 'City is required';
+      errors.city = t('addresses.cityRequired.value');
     }
     
     if (!formData.state?.trim()) {
-      errors.state = 'State is required';
+      errors.state = t('addresses.stateRequired.value');
     }
     
     if (!formData.postal_code?.trim()) {
-      errors.postal_code = 'Postal code is required';
+      errors.postal_code = t('addresses.postalCodeRequired.value');
     } else if (!/^\d{6}$/.test(formData.postal_code.trim())) {
-      errors.postal_code = 'Postal code must be 6 digits';
+      errors.postal_code = t('addresses.postalCodeInvalid.value');
     }
     
-    // Registered address specific validation
     if (formData.address_type === 'Registered') {
       if (!formData.firm_name?.trim()) {
-        errors.firm_name = 'Firm name is required for registered addresses';
+        errors.firm_name = t('addresses.firmNameRequired.value');
       }
       if (!formData.gst_number?.trim()) {
-        errors.gst_number = 'GST number is required for registered addresses';
+        errors.gst_number = t('addresses.gstNumberRequired.value');
       } else if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(formData.gst_number)) {
-        errors.gst_number = 'Invalid GST format';
+        errors.gst_number = t('addresses.gstNumberInvalid.value');
       }
     }
     
@@ -156,7 +156,7 @@ const Addresses: React.FC = () => {
 
   const handleSave = async () => {
     if (!validateForm()) {
-      Alert.alert('Validation Error', 'Please fix the errors and try again');
+      Alert.alert(t('addresses.validationError.value'), t('createOrder.fixErrors.value'));
       return;
     }
 
@@ -164,16 +164,16 @@ const Addresses: React.FC = () => {
       setSaving(true);
       if (editingAddress) {
         await profileService.updateAddress(editingAddress.id, formData);
-        Alert.alert('Success', 'Address updated successfully');
+        Alert.alert(t('common.success.value'), t('addresses.addressUpdated.value'));
       } else {
         await profileService.createAddress(formData);
-        Alert.alert('Success', 'Address added successfully');
+        Alert.alert(t('common.success.value'), t('addresses.addressAdded.value'));
       }
       setModalVisible(false);
       fetchAddresses();
     } catch (error) {
       console.error('Failed to save address:', error);
-      Alert.alert('Error', 'Failed to save address');
+      Alert.alert(t('common.error.value'), t('addresses.failedToSave.value'));
     } finally {
       setSaving(false);
     }
@@ -181,21 +181,21 @@ const Addresses: React.FC = () => {
 
   const handleDelete = (address: Address) => {
     Alert.alert(
-      'Delete Address',
-      `Are you sure you want to delete this address${address.name ? ` (${address.name})` : ''}?`,
+      t('addresses.deleteAddress.value'),
+      `${t('addresses.deleteConfirm.value')}${address.name ? ` (${address.name})` : ''}?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel.value'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete.value'),
           style: 'destructive',
           onPress: async () => {
             try {
               await profileService.deleteAddress(address.id);
               fetchAddresses();
-              Alert.alert('Success', 'Address deleted successfully');
+              Alert.alert(t('common.success.value'), t('addresses.addressDeleted.value'));
             } catch (error) {
               console.error('Failed to delete address:', error);
-              Alert.alert('Error', 'Failed to delete address');
+              Alert.alert(t('common.error.value'), t('addresses.failedToDelete.value'));
             }
           },
         },
@@ -204,9 +204,7 @@ const Addresses: React.FC = () => {
   };
 
   const handleCall = (number: string) => {
-    // You can implement actual calling functionality here
-    // For example, using Linking.openURL(`tel:${number}`)
-    Alert.alert('Call', `Calling ${number}`);
+    Alert.alert(t('addresses.call.value'), `${t('addresses.calling.value')} ${number}`);
   };
 
   const getAddressTypeIcon = (type: string): keyof typeof MaterialIcons.glyphMap => {
@@ -242,13 +240,12 @@ const Addresses: React.FC = () => {
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {item.is_active && (
             <View style={styles.activeBadge}>
-              <Text style={styles.activeText}>Active</Text>
+              <Text style={styles.activeText}>{t('addresses.activeAddress.value')}</Text>
             </View>
           )}
         </View>
       </View>
 
-      {/* Contact Information Section */}
       {(item.name || item.number) && (
         <View style={styles.contactSection}>
           {item.name && (
@@ -274,7 +271,7 @@ const Addresses: React.FC = () => {
       <Text style={styles.addressLocation}>
         {item.city}, {item.state} - {item.postal_code}
       </Text>
-      {item.landmark && <Text style={styles.landmark}>Landmark: {item.landmark}</Text>}
+      {item.landmark && <Text style={styles.landmark}>{t('addresses.landmark.value')}: {item.landmark}</Text>}
 
       <View style={styles.addressActions}>
         <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -301,7 +298,7 @@ const Addresses: React.FC = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary.main} />
-        <Text style={styles.loadingText}>Loading addresses...</Text>
+        <Text style={styles.loadingText}>{t('addresses.loadingAddresses.value')}</Text>
       </View>
     );
   }
@@ -309,10 +306,10 @@ const Addresses: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Addresses</Text>
+        <Text style={styles.headerTitle}>{t('addresses.title.value')}</Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddNew}>
           <Feather name="plus" size={20} color={theme.colors.text.onPrimary} />
-          <Text style={styles.addButtonText}>Add New</Text>
+          <Text style={styles.addButtonText}>{t('addresses.addNew.value')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -330,13 +327,12 @@ const Addresses: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <MaterialIcons name="location-off" size={64} color={theme.colors.text.tertiary} />
-            <Text style={styles.emptyText}>No addresses found</Text>
-            <Text style={styles.emptySubtext}>Add your first address to get started</Text>
+            <Text style={styles.emptyText}>{t('addresses.noAddresses.value')}</Text>
+            <Text style={styles.emptySubtext}>{t('addresses.addFirstAddress.value')}</Text>
           </View>
         }
       />
 
-      {/* Add/Edit Modal */}
       <Modal 
         visible={modalVisible} 
         animationType="slide" 
@@ -351,7 +347,7 @@ const Addresses: React.FC = () => {
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>
-                  {editingAddress ? 'Edit Address' : 'Add New Address'}
+                  {editingAddress ? t('addresses.editAddress.value') : t('addresses.addNewAddress.value')}
                 </Text>
                 <TouchableOpacity onPress={() => setModalVisible(false)} disabled={saving}>
                   <Feather name="x" size={24} color={theme.colors.text.primary} />
@@ -359,14 +355,13 @@ const Addresses: React.FC = () => {
               </View>
 
               <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 500 }}>
-                {/* Contact Information Section */}
                 <View style={styles.formSectionHeader}>
                   <Feather name="user" size={18} color={theme.colors.primary.main} />
-                  <Text style={styles.formSectionTitle}>Contact Information</Text>
+                  <Text style={styles.formSectionTitle}>{t('addresses.contactInfo.value')}</Text>
                 </View>
 
                 <View style={styles.formSection}>
-                  <Text style={styles.inputLabel}>Contact Name *</Text>
+                  <Text style={styles.inputLabel}>{t('addresses.contactName.value')} *</Text>
                   <TextInput
                     style={[styles.input, formErrors.name && styles.inputError]}
                     value={formData.name}
@@ -384,12 +379,11 @@ const Addresses: React.FC = () => {
                 </View>
 
                 <View style={styles.formSection}>
-                  <Text style={styles.inputLabel}>Contact Number *</Text>
+                  <Text style={styles.inputLabel}>{t('addresses.contactNumber.value')} *</Text>
                   <TextInput
                     style={[styles.input, formErrors.number && styles.inputError]}
                     value={formData.number}
                     onChangeText={(text) => {
-                      // Remove non-numeric characters and limit to 10 digits
                       const cleaned = text.replace(/\D/g, '').slice(0, 10);
                       setFormData({ ...formData, number: cleaned });
                       if (formErrors.number) {
@@ -405,9 +399,8 @@ const Addresses: React.FC = () => {
                   {formErrors.number && <Text style={styles.errorText}>{formErrors.number}</Text>}
                 </View>
 
-                {/* Address Type Section */}
                 <View style={styles.formSection}>
-                  <Text style={styles.inputLabel}>Address Type *</Text>
+                  <Text style={styles.inputLabel}>{t('addresses.addressType.value')} *</Text>
                   <View style={styles.typeSelector}>
                     {(['Pickup', 'Delivery', 'Billing', 'Registered'] as const).map((type) => (
                       <TouchableOpacity
@@ -430,14 +423,13 @@ const Addresses: React.FC = () => {
                   </View>
                 </View>
 
-                {/* Address Details Section */}
                 <View style={styles.formSectionHeader}>
                   <MaterialIcons name="location-on" size={18} color={theme.colors.primary.main} />
-                  <Text style={styles.formSectionTitle}>Address Details</Text>
+                  <Text style={styles.formSectionTitle}>{t('addresses.addressDetails.value')}</Text>
                 </View>
 
                 <View style={styles.formSection}>
-                  <Text style={styles.inputLabel}>Address Line 1 *</Text>
+                  <Text style={styles.inputLabel}>{t('addresses.addressLine1.value')} *</Text>
                   <TextInput
                     style={[styles.input, formErrors.address_line_1 && styles.inputError]}
                     value={formData.address_line_1}
@@ -447,7 +439,7 @@ const Addresses: React.FC = () => {
                         setFormErrors({ ...formErrors, address_line_1: '' });
                       }
                     }}
-                    placeholder="Building, Street name"
+                    placeholder={t('addresses.addressLine1Placeholder.value')}
                     placeholderTextColor={theme.colors.text.tertiary}
                     editable={!saving}
                   />
@@ -455,12 +447,12 @@ const Addresses: React.FC = () => {
                 </View>
 
                 <View style={styles.formSection}>
-                  <Text style={styles.inputLabel}>Address Line 2</Text>
+                  <Text style={styles.inputLabel}>{t('addresses.addressLine2.value')}</Text>
                   <TextInput
                     style={styles.input}
                     value={formData.address_line_2}
                     onChangeText={(text) => setFormData({ ...formData, address_line_2: text })}
-                    placeholder="Floor, Unit number (Optional)"
+                    placeholder={t('addresses.addressLine2Placeholder.value')}
                     placeholderTextColor={theme.colors.text.tertiary}
                     editable={!saving}
                   />
@@ -468,7 +460,7 @@ const Addresses: React.FC = () => {
 
                 <View style={styles.formRow}>
                   <View style={[styles.formSection, { flex: 1, marginRight: 8 }]}>
-                    <Text style={styles.inputLabel}>City *</Text>
+                    <Text style={styles.inputLabel}>{t('addresses.city.value')} *</Text>
                     <TextInput
                       style={[styles.input, formErrors.city && styles.inputError]}
                       value={formData.city}
@@ -478,7 +470,7 @@ const Addresses: React.FC = () => {
                           setFormErrors({ ...formErrors, city: '' });
                         }
                       }}
-                      placeholder="City"
+                      placeholder={t('addresses.city.value')}
                       placeholderTextColor={theme.colors.text.tertiary}
                       editable={!saving}
                     />
@@ -486,7 +478,7 @@ const Addresses: React.FC = () => {
                   </View>
 
                   <View style={[styles.formSection, { flex: 1, marginLeft: 8 }]}>
-                    <Text style={styles.inputLabel}>State *</Text>
+                    <Text style={styles.inputLabel}>{t('addresses.state.value')} *</Text>
                     <TextInput
                       style={[styles.input, formErrors.state && styles.inputError]}
                       value={formData.state}
@@ -496,7 +488,7 @@ const Addresses: React.FC = () => {
                           setFormErrors({ ...formErrors, state: '' });
                         }
                       }}
-                      placeholder="State"
+                      placeholder={t('addresses.state.value')}
                       placeholderTextColor={theme.colors.text.tertiary}
                       editable={!saving}
                     />
@@ -505,7 +497,7 @@ const Addresses: React.FC = () => {
                 </View>
 
                 <View style={styles.formSection}>
-                  <Text style={styles.inputLabel}>Postal Code *</Text>
+                  <Text style={styles.inputLabel}>{t('addresses.postalCode.value')} *</Text>
                   <TextInput
                     style={[styles.input, formErrors.postal_code && styles.inputError]}
                     value={formData.postal_code}
@@ -526,39 +518,38 @@ const Addresses: React.FC = () => {
                 </View>
 
                 <View style={styles.formSection}>
-                  <Text style={styles.inputLabel}>Landmark</Text>
+                  <Text style={styles.inputLabel}>{t('addresses.landmark.value')}</Text>
                   <TextInput
                     style={styles.input}
                     value={formData.landmark}
                     onChangeText={(text) => setFormData({ ...formData, landmark: text })}
-                    placeholder="Nearby landmark (Optional)"
+                    placeholder={t('addresses.landmarkPlaceholder.value')}
                     placeholderTextColor={theme.colors.text.tertiary}
                     editable={!saving}
                   />
                 </View>
 
                 <View style={styles.formSection}>
-                  <Text style={styles.inputLabel}>Country</Text>
+                  <Text style={styles.inputLabel}>{t('addresses.country.value')}</Text>
                   <TextInput
                     style={styles.input}
                     value={formData.country}
                     onChangeText={(text) => setFormData({ ...formData, country: text })}
-                    placeholder="Country"
+                    placeholder={t('addresses.country.value')}
                     placeholderTextColor={theme.colors.text.tertiary}
                     editable={!saving}
                   />
                 </View>
 
-                {/* Registered Address Fields */}
                 {formData.address_type === 'Registered' && (
                   <>
                     <View style={styles.formSectionHeader}>
                       <MaterialIcons name="business" size={18} color={theme.colors.primary.main} />
-                      <Text style={styles.formSectionTitle}>Firm Information</Text>
+                      <Text style={styles.formSectionTitle}>{t('addresses.firmInformation.value')}</Text>
                     </View>
 
                     <View style={styles.formSection}>
-                      <Text style={styles.inputLabel}>Firm Name *</Text>
+                      <Text style={styles.inputLabel}>{t('addresses.firmName.value')} *</Text>
                       <TextInput
                         style={[styles.input, formErrors.firm_name && styles.inputError]}
                         value={formData.firm_name || ''}
@@ -576,7 +567,7 @@ const Addresses: React.FC = () => {
                     </View>
 
                     <View style={styles.formSection}>
-                      <Text style={styles.inputLabel}>GST Number *</Text>
+                      <Text style={styles.inputLabel}>{t('addresses.gstNumber.value')} *</Text>
                       <TextInput
                         style={[styles.input, formErrors.gst_number && styles.inputError]}
                         value={formData.gst_number || ''}
@@ -599,7 +590,7 @@ const Addresses: React.FC = () => {
 
                 <View style={styles.formSection}>
                   <View style={styles.switchRow}>
-                    <Text style={styles.switchLabel}>Active</Text>
+                    <Text style={styles.switchLabel}>{t('addresses.activeAddress.value')}</Text>
                     <Switch
                       value={formData.is_active !== false}
                       onValueChange={(value) => setFormData({ ...formData, is_active: value })}
@@ -620,7 +611,7 @@ const Addresses: React.FC = () => {
                   onPress={() => setModalVisible(false)}
                   disabled={saving}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                  <Text style={styles.cancelButtonText}>{t('common.cancel.value')}</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
@@ -631,7 +622,7 @@ const Addresses: React.FC = () => {
                   {saving ? (
                     <ActivityIndicator size="small" color={theme.colors.text.onPrimary} />
                   ) : (
-                    <Text style={styles.saveButtonText}>Save</Text>
+                    <Text style={styles.saveButtonText}>{t('common.save.value')}</Text>
                   )}
                 </TouchableOpacity>
               </View>

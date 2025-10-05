@@ -1,9 +1,10 @@
-// app/ViewOrders/index.tsx - Updated with Date Range Filter
+// app/components/ViewOrders/index.tsx
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -40,6 +41,10 @@ type FilterType = 'All' | 'In Progress' | 'Active' | 'Completed';
 
 const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }) => {
   const { token } = useAuth();
+  const { t } = useTranslation();
+  const { theme } = useTheme();
+  const styles = useViewOrdersStyles(theme);
+
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('All');
   const [filterCounts, setFilterCounts] = useState<Record<FilterType, number>>({
@@ -58,25 +63,21 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
   const [dateRange, setDateRange] = useState<DateRange>({ startDate: null, endDate: null });
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const { theme } = useTheme();
-  const styles = useViewOrdersStyles(theme);
-
   useEffect(() => {
     loadOrders(true);
     loadFilterCounts();
   }, [selectedFilter, dateRange]);
 
   useEffect(() => {
-    // If navigated with an orderId, scroll to that order
     if (route?.params?.orderId) {
-      // You can implement scroll to specific order logic here
+      // Scroll to specific order logic
     }
   }, [route?.params?.orderId]);
 
   const getStatusForFilter = (filter: FilterType): string | undefined => {
     switch (filter) {
       case 'In Progress':
-        return 'pickup requested,pickup assigned'; // Add your actual status names
+        return 'pickup requested,pickup assigned';
       case 'Active':
         return 'Ready to Pick,Picked,Out for Delivery,In Transit';
       case 'Completed':
@@ -86,18 +87,14 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
     }
   };
 
-  // Helper function to determine if contract is distance/km based
   const isDistanceBasedContract = (order: OrderListItem): boolean => {
     if (order?.drop_address_text && order.drop_poc_name && order.drop_poc_number) {
-      console.log(`Order ${order.order_number} is distance-based.`);
       return true;
     }
-    console.log(`Order ${order?.order_number} is not distance-based.`);
     return false;
   };
 
   const formatDateForAPI = (date: Date): string => {
-    // Use local date components to avoid timezone issues
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -135,7 +132,6 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
       const response: PaginatedResponse<OrderListItem> = await orderService.getClientOrders(params);
       
       if (reset) {
-        console.log('Orders fetched:', response.results[0]);
         setOrders(response.results);
       } else {
         setOrders([...orders, ...response.results]);
@@ -147,7 +143,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
       }
     } catch (error) {
       console.error('Error loading orders:', error);
-      Alert.alert('Error', 'Failed to load orders. Please try again.');
+      Alert.alert(t('common.error.value'), t('orders.failedToLoad.value'));
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
@@ -161,7 +157,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
         const statusFilter = getStatusForFilter(filter);
         const params: any = {
           page: 1,
-          page_size: 1, // We only need the count, so minimal data
+          page_size: 1,
         };
 
         if (statusFilter && filter !== 'All') {
@@ -190,7 +186,6 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
       setFilterCounts(countsMap);
     } catch (error) {
       console.error('Error loading filter counts:', error);
-      // Reset counts on error
       setFilterCounts({
         'All': 0,
         'In Progress': 0,
@@ -219,26 +214,26 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
 
   const handleCancelOrder = async (order: OrderListItem) => {
     if (order.status !== 'Created' && order.status !== 'Ready to Pick') {
-      Alert.alert('Cannot Cancel', 'Order cannot be cancelled after pickup.');
+      Alert.alert(t('orders.cannotCancel.value'), t('orders.cannotCancel.value'));
       return;
     }
 
     Alert.alert(
-      'Cancel Order',
-      `Are you sure you want to cancel order #${order.order_number}?`,
+      t('orders.cancelOrder.value'),
+      t('orders.cancelOrderConfirm.value'),
       [
-        { text: 'No', style: 'cancel' },
+        { text: t('common.no.value'), style: 'cancel' },
         {
-          text: 'Yes, Cancel',
+          text: t('common.yes.value'),
           style: 'destructive',
           onPress: async () => {
             try {
               await orderService.cancelOrder(order.id, 'Cancelled by customer');
-              Alert.alert('Success', 'Order cancelled successfully');
+              Alert.alert(t('common.success.value'), t('orders.orderCancelledSuccess.value'));
               handleRefresh();
             } catch (error) {
               console.error('Error cancelling order:', error);
-              Alert.alert('Error', 'Failed to cancel order. Please try again.');
+              Alert.alert(t('common.error.value'), t('orders.failedToCancel.value'));
             }
           },
         },
@@ -273,7 +268,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
 
   const getDateRangeDisplayText = (): string => {
     if (!dateRange.startDate && !dateRange.endDate) {
-      return 'All Time';
+      return t('orders.allTime.value');
     }
     
     if (dateRange.startDate && dateRange.endDate) {
@@ -286,7 +281,6 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
         month: 'short' 
       });
       
-      // Same year, show abbreviated format
       if (dateRange.startDate.getFullYear() === dateRange.endDate.getFullYear()) {
         return `${start} - ${end}`;
       }
@@ -294,7 +288,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
       return `${start} ${dateRange.startDate.getFullYear()} - ${end} ${dateRange.endDate.getFullYear()}`;
     }
     
-    return 'Custom Range';
+    return t('orders.customRange.value');
   };
 
   const renderOrderItem = ({ item }: { item: OrderListItem }) => {
@@ -309,7 +303,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
       >
         <View style={styles.orderHeader}>
           <View style={styles.orderIdContainer}>
-            <Text style={styles.orderIdLabel}>Order</Text>
+            <Text style={styles.orderIdLabel}>{t('orders.orderNumber.value')}</Text>
             <Text style={styles.orderId}>#{item.order_number}</Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
@@ -319,7 +313,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
               color={statusColor} 
             />
             <Text style={[styles.statusText, { color: statusColor }]}>
-              {item.status}
+              {t('statuses.'+ item.status .toLowerCase().replace(/ /g, '') + '.value')}
             </Text>
           </View>
         </View>
@@ -368,7 +362,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
           </View>
           
           {item.order_amount && (
-            <Text style={styles.orderAmount}>TBC</Text>
+            <Text style={styles.orderAmount}>{t('orderDetails.tbc.value')}</Text>
           )}
         </View>
         
@@ -378,7 +372,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
               style={styles.cancelButton}
               onPress={() => handleCancelOrder(item)}
             >
-              <Text style={styles.cancelButtonText}>Cancel Order</Text>
+              <Text style={styles.cancelButtonText}>{t('orders.cancelOrder.value')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -386,7 +380,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
         {item.is_overdue && (
           <View style={styles.overdueTag}>
             <MaterialIcons name="warning" size={12} color={Colors.text.warning} />
-            <Text style={styles.overdueText}>Overdue</Text>
+            <Text style={styles.overdueText}>{t('orders.overdue.value')}</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -396,21 +390,21 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
       <MaterialIcons name="inbox" size={64} color={Colors.text.tertiary} />
-      <Text style={styles.emptyTitle}>No Orders Found</Text>
+      <Text style={styles.emptyTitle}>{t('orders.noOrders.value')}</Text>
       <Text style={styles.emptySubtitle}>
         {selectedFilter === 'All' 
-          ? "You haven't created any orders yet" 
+          ? t('orders.noOrdersMessage.value')
           : selectedFilter === 'In Progress'
-          ? 'No orders in progress'
+          ? t('orders.noInProgress.value')
           : selectedFilter === 'Active'
-          ? 'No active orders'
-          : 'No completed orders'}
+          ? t('orders.noActive.value')
+          : t('orders.noCompleted.value')}
       </Text>
       <TouchableOpacity 
         style={styles.createOrderButton}
         onPress={() => navigation.navigate('CreateOrder')}
       >
-        <Text style={styles.createOrderButtonText}>Create Your First Order</Text>
+        <Text style={styles.createOrderButtonText}>{t('orders.createFirstOrder.value')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -427,9 +421,6 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
 
   const filters: FilterType[] = ['All', 'In Progress', 'Active', 'Completed'];
 
-  console.log(`Rendering ViewOrdersScreen with ${orders.length} orders, filter: ${selectedFilter}, isLoading: ${isLoading}, isRefreshing: ${isRefreshing}`);
-  console.log('Current orders:', orders[0]);
-
   return (
     <>
       <StatusBar backgroundColor={theme.colors.secondary.main} barStyle="light-content" />
@@ -437,7 +428,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
         {/* Header */}
         <CustomHeader
           navigation={navigation}
-          title="My Orders"
+          title={t('orders.myOrders.value')}
           showBack={false}
           showMenu={false}
         />
@@ -460,7 +451,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
                     selectedFilter === filter && styles.filterTextActive,
                   ]}
                 >
-                  {filter}
+                  {t(`orders.${filter.toLowerCase().replace(' ', '')}.value`)}
                 </Text>
                 <View style={[
                   styles.filterCountBadge,
@@ -505,7 +496,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.secondary.main} />
-            <Text style={styles.loadingText}>Loading orders...</Text>
+            <Text style={styles.loadingText}>{t('common.loading.value')}</Text>
           </View>
         ) : (
           <FlatList
