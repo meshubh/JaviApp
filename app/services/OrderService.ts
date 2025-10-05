@@ -49,6 +49,7 @@ export interface Address {
   contact_person_phone?: string;
   is_active: boolean;
   contact_info?: string;
+  firm_name?: string;
 }
 
 export interface OrderListItem {

@@ -58,6 +58,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   // POC fields
   const [pickupPocName, setPickupPocName] = useState('');
   const [pickupPocNumber, setPickupPocNumber] = useState('');
+  const [dropAddressFirmName, setDropAddressFirmName] = useState('');
   const [dropPocName, setDropPocName] = useState('');
   const [dropPocNumber, setDropPocNumber] = useState('');
   
@@ -147,8 +148,8 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
       console.log('[CreateOrder] Fetched contracts:', contractsData?.length || 0);
       console.log('[CreateOrder] Fetched addresses:', addressesData?.length || 0);
       
-      setContracts(contractsData || []);
-      setAddresses(addressesData || []);
+      setContracts(contractsData);
+      setAddresses(addressesData);
       
       // Set default selections if available
       if (contractsData && contractsData.length > 0) {
@@ -187,6 +188,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   };
 
   const handleDropAddressSelect = useCallback((address: string, addressId?: string) => {
+    console.log('Addresses:', addresses);
     setDropAddressText(address);
     if (addressId) {
       setDropAddressId(addressId);
@@ -194,6 +196,15 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     } else {
       setDropAddressId('');
       setSelectedDropAddress('');
+    }
+    const add = addresses.find(addr => addr.id === addressId);
+    console.log('Selected drop address:', add);
+    if (add) {
+      const contact_info = add.contact_info || '';
+      const [poc_name, poc_number] = contact_info && contact_info.split(' - '); // Assuming 'Name - Number' format
+      setDropAddressFirmName(add.firm_name || '');
+      setDropPocName(poc_name || '');
+      setDropPocNumber(poc_number || '');
     }
   }, []);
 
@@ -317,7 +328,11 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   const onDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      setExpectedPickupDate(selectedDate);
+      // Set default time to 6 PM (18:00)
+      const dateWithDefaultTime = new Date(selectedDate);
+      dateWithDefaultTime.setHours(18, 0, 0, 0); // 6 PM, 0 minutes, 0 seconds, 0 milliseconds
+      
+      setExpectedPickupDate(dateWithDefaultTime);
       setShowTimePicker(true);
     }
   };
@@ -338,7 +353,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
     const address = addresses.find(addr => addr.id === addressId);
     if (address) {
       const contact_info = address.contact_info || '';
-      const [poc_name, poc_number] = contact_info.split(' - '); // Assuming 'Name - Number' format
+      const [poc_name, poc_number] = contact_info && contact_info.split(' - '); // Assuming 'Name - Number' format
       setPickupPocName(poc_name || '');
       setPickupPocNumber(poc_number || '');
     }
@@ -471,11 +486,11 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
               {/* Pickup POC - Always visible */}
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>
-                  Pickup POC Name <Text style={styles.requiredAsterisk}>*</Text>
+                  Pickup Contact Person Name <Text style={styles.requiredAsterisk}>*</Text>
                 </Text>
                 <TextInput
                   style={styles.formInput}
-                  placeholder="Enter pickup POC name"
+                  placeholder="Enter pickup contact person name"
                   placeholderTextColor={theme.colors.text.tertiary}
                   value={pickupPocName}
                   onChangeText={setPickupPocName}
@@ -484,11 +499,11 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>
-                  Pickup POC Number <Text style={styles.requiredAsterisk}>*</Text>
+                  Pickup Contact Person Number <Text style={styles.requiredAsterisk}>*</Text>
                 </Text>
                 <TextInput
                   style={styles.formInput}
-                  placeholder="Enter pickup POC number"
+                  placeholder="Enter pickup contact person number"
                   placeholderTextColor={theme.colors.text.tertiary}
                   value={pickupPocNumber}
                   onChangeText={setPickupPocNumber}
@@ -501,11 +516,23 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
                 <>
                   <View style={styles.formGroup}>
                     <Text style={styles.formLabel}>
-                      Drop POC Name <Text style={styles.requiredAsterisk}>*</Text>
+                      Drop Address Firm Name <Text style={styles.requiredAsterisk}>*</Text>
                     </Text>
                     <TextInput
                       style={styles.formInput}
-                      placeholder="Enter drop POC name"
+                      placeholder="Enter drop address firm name"
+                      placeholderTextColor={theme.colors.text.tertiary}
+                      value={dropAddressFirmName}
+                      onChangeText={setDropAddressFirmName}
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.formLabel}>
+                      Drop Contact Person Name <Text style={styles.requiredAsterisk}>*</Text>
+                    </Text>
+                    <TextInput
+                      style={styles.formInput}
+                      placeholder="Enter drop contact person name"
                       placeholderTextColor={theme.colors.text.tertiary}
                       value={dropPocName}
                       onChangeText={setDropPocName}
@@ -514,11 +541,11 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
                   <View style={styles.formGroup}>
                     <Text style={styles.formLabel}>
-                      Drop POC Number <Text style={styles.requiredAsterisk}>*</Text>
+                      Drop Contact Person Number <Text style={styles.requiredAsterisk}>*</Text>
                     </Text>
                     <TextInput
                       style={styles.formInput}
-                      placeholder="Enter drop POC number"
+                      placeholder="Enter drop contact person number"
                       placeholderTextColor={theme.colors.text.tertiary}
                       value={dropPocNumber}
                       onChangeText={setDropPocNumber}
