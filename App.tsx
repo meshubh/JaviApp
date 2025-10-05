@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet } from 'react-native';
 import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Import providers and contexts
 import { AuthProvider, useAuth } from './app/contexts/AuthContext';
@@ -71,6 +71,7 @@ const PaymentsScreen: React.FC = () => {
 const BottomTabNavigator: React.FC = () => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -94,13 +95,17 @@ const BottomTabNavigator: React.FC = () => {
           backgroundColor: theme.colors.background.primary,
           borderTopWidth: 1,
           borderTopColor: theme.colors.border.primary,
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
+          paddingBottom: 4,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 4,
         },
       })}
     >
