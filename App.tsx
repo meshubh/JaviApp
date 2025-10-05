@@ -1,5 +1,6 @@
 // App.tsx
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,8 +16,6 @@ import { AuthProvider, useAuth } from './app/contexts/AuthContext';
 
 // Import screens
 import CreateOrder from './app/components/CreateOrder';
-import CustomDrawer from './app/components/CustomDrawer';
-import HomeScreen from './app/components/HomeScreen';
 import LoginScreen from './app/components/Login';
 import OrderDetailsScreen from './app/components/OrderDetails';
 import PasswordChangeDialog from './app/components/PasswordChangeDialog/index';
@@ -25,15 +24,14 @@ import ViewOrders from './app/components/ViewOrders';
 import { authService } from './app/services/AuthService';
 
 // Import types and theme
-import { ThemeProvider } from './app/theme/themeContext';
+import { ThemeProvider, useTheme } from './app/theme/themeContext';
 import { RootStackParamList } from './app/types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Drawer = createDrawerNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<RootStackParamList>();
 
 // Loading Screen Component
 const LoadingScreen: React.FC = () => {
-  // Temporarily use a hardcoded color until theme is loaded
   return (
     <LinearGradient
       colors={['#4A90E2', '#50E3C2']}
@@ -44,27 +42,79 @@ const LoadingScreen: React.FC = () => {
   );
 };
 
-// Drawer Navigator Component
-const DrawerNavigator: React.FC = () => {
+// Placeholder screens for Coins and Payments
+const CoinsScreen: React.FC = () => {
+  const { theme } = useTheme();
   return (
-    <Drawer.Navigator
-      drawerContent={(props) => <CustomDrawer {...props} />}
-      screenOptions={{
+    <LinearGradient colors={[theme.colors.primary.main, theme.colors.secondary.main]} style={styles.placeholderContainer}>
+      <Ionicons name="wallet-outline" size={60} color="white" />
+      <ActivityIndicator size="large" color="white" style={{ marginTop: 20 }} />
+    </LinearGradient>
+  );
+};
+
+const PaymentsScreen: React.FC = () => {
+  const { theme } = useTheme();
+  return (
+    <LinearGradient colors={[theme.colors.primary.main, theme.colors.secondary.main]} style={styles.placeholderContainer}>
+      <Ionicons name="card-outline" size={60} color="white" />
+      <ActivityIndicator size="large" color="white" style={{ marginTop: 20 }} />
+    </LinearGradient>
+  );
+};
+
+// Bottom Tab Navigator Component
+const BottomTabNavigator: React.FC = () => {
+  const { theme } = useTheme();
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
         headerShown: false,
-        drawerStyle: {
-          width: '75%',
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap | keyof typeof MaterialIcons.glyphMap;
+          
+          if (route.name === 'Home') {
+            iconName = 'home';
+            return <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />;
+          } else if (route.name === 'ViewOrders') {
+            return <Ionicons name={focused ? 'receipt' : 'receipt-outline'} size={size} color={color} />;
+          } else if (route.name === 'Profile') {
+            return <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />;
+          }
         },
-        drawerType: 'slide',
-        overlayColor: 'rgba(0,0,0,0.5)',
-        swipeEnabled: true,
-        swipeEdgeWidth: 100,
-      }}
+        tabBarActiveTintColor: theme.colors.primary.main,
+        tabBarInactiveTintColor: theme.colors.text.tertiary,
+        tabBarStyle: {
+          backgroundColor: theme.colors.background.primary,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.border.primary,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        },
+      })}
     >
-      <Drawer.Screen name="Home" component={HomeScreen} />
-      <Drawer.Screen name="CreateOrder" component={CreateOrder} />
-      <Drawer.Screen name="ViewOrders" component={ViewOrders} />
-      <Drawer.Screen name="Profile" component={Profile} />
-    </Drawer.Navigator>
+      <Tab.Screen 
+        name="Home" 
+        component={CreateOrder}
+        options={{ tabBarLabel: 'Home' }}
+      />
+      <Tab.Screen 
+        name="ViewOrders" 
+        component={ViewOrders}
+        options={{ tabBarLabel: 'Orders' }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={Profile}
+        options={{ tabBarLabel: 'Account' }}
+      />
+    </Tab.Navigator>
   );
 };
 
@@ -96,13 +146,8 @@ const AuthenticatedNavigator: React.FC = () => {
   const handlePasswordChangeSuccess = async () => {
     try {
       console.log('Password change successful, updating local storage...');
-      
-      // Mark password change as complete in local storage
       await authService.markPasswordChangeComplete();
-      
-      // Close the dialog
       setShowPasswordDialog(false);
-      
       console.log('Password change flow completed successfully');
     } catch (error) {
       console.error('Error handling password change success:', error);
@@ -111,21 +156,14 @@ const AuthenticatedNavigator: React.FC = () => {
 
   const handlePasswordChangeCancel = async () => {
     console.log('User canceled password change');
-    
-    // For first login scenarios, user cannot proceed without changing password
-    // So we'll force logout to maintain security
     try {
       await authService.logout();
       console.log('User logged out due to password change cancellation');
     } catch (error) {
       console.error('Error during forced logout:', error);
     }
-    
-    // The auth context will automatically redirect to login screen
-    // when user is logged out
   };
 
-  // Show loading screen while checking password requirement
   if (checkingPasswordRequirement) {
     return <LoadingScreen />;
   }
@@ -134,9 +172,17 @@ const AuthenticatedNavigator: React.FC = () => {
     <>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen
-          name="Home"
-          component={DrawerNavigator}
+          name="MainTabs"
+          component={BottomTabNavigator}
           options={{ animation: 'fade' }}
+        />
+        <Stack.Screen
+          name="CreateOrder"
+          component={CreateOrder}
+          options={{ 
+            animation: 'slide_from_bottom',
+            presentation: 'modal'
+          }}
         />
         <Stack.Screen
           name="OrderDetails"
@@ -147,7 +193,6 @@ const AuthenticatedNavigator: React.FC = () => {
         />
       </Stack.Navigator>
       
-      {/* Password Change Dialog - Overlays the entire authenticated stack */}
       <PasswordChangeDialog
         visible={showPasswordDialog}
         onSuccess={handlePasswordChangeSuccess}
@@ -206,6 +251,11 @@ export default function App() {
 
 const styles = StyleSheet.create({
   loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

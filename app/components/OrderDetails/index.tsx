@@ -1,6 +1,8 @@
 // app/OrderDetails/index.tsx
 import { Feather, MaterialIcons } from '@expo/vector-icons';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -24,7 +26,10 @@ import ShipmentsList from '../ShipmentsLists/index';
 import { useOrderDetailsStyles } from './orderDetails.styles';
 
 interface OrderDetailsScreenProps {
-  navigation: DrawerNavigationProp<RootStackParamList, 'OrderDetails'>;
+  navigation: CompositeNavigationProp<
+    NativeStackNavigationProp<RootStackParamList, 'OrderDetails'>,
+    BottomTabNavigationProp<RootStackParamList>
+  >;
   route: {
     params: {
       orderId: string;
@@ -461,13 +466,14 @@ ${order.drop_address.address_line_2 ? order.drop_address.address_line_2 + '\n' :
             {order.order_amount && (
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Order Amount:</Text>
-                <Text style={[styles.infoValue, styles.amountText]}>₹{order.order_amount}</Text>
+                <Text style={[styles.infoValue, styles.amountText]}>TBC</Text>
               </View>
             )}
             {order.cod_amount && (
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>COD Amount:</Text>
-                <Text style={[styles.infoValue, styles.amountText]}>₹{order.cod_amount}</Text>
+                {/* <Text style={[styles.infoValue, styles.amountText]}>₹{order.cod_amount}</Text> */}
+                <Text style={[styles.infoValue, styles.amountText]}>TBC</Text>
               </View>
             )}
           </View>

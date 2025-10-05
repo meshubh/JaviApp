@@ -1,8 +1,9 @@
 // app/CreateOrder/index.tsx
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
-import { useFocusEffect } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp, useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -27,7 +28,10 @@ import SearchableDropdown from '../common/SearchableDropdown';
 import { useCreateOrderStyles } from './createOrder.styles';
 
 interface CreateOrderProps {
-  navigation: DrawerNavigationProp<RootStackParamList, 'CreateOrder'>;
+  navigation: CompositeNavigationProp<
+    BottomTabNavigationProp<RootStackParamList, 'CreateOrder'>,
+    NativeStackNavigationProp<RootStackParamList>
+  >;
 }
 
 const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
@@ -188,7 +192,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
   };
 
   const handleDropAddressSelect = useCallback((address: string, addressId?: string) => {
-    console.log('Addresses:', addresses);
     setDropAddressText(address);
     if (addressId) {
       setDropAddressId(addressId);
@@ -198,7 +201,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
       setSelectedDropAddress('');
     }
     const add = addresses.find(addr => addr.id === addressId);
-    console.log('Selected drop address:', add);
     if (add) {
       const contact_info = add.contact_info || '';
       const [poc_name, poc_number] = contact_info && contact_info.split(' - '); // Assuming 'Name - Number' format
@@ -378,7 +380,7 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
         <CustomHeader
           navigation={navigation}
           title="Create Order"
-          showBack={true}
+          showBack={false}
           showMenu={false}
         />
         
@@ -699,14 +701,6 @@ const CreateOrder: React.FC<CreateOrderProps> = ({ navigation }) => {
 
             {/* Submit Buttons */}
             <View style={styles.actionButtonsContainer}>
-              <TouchableOpacity 
-                style={[styles.actionButton, styles.secondaryActionButton]}
-                onPress={() => navigation.goBack()}
-                disabled={isLoading}
-              >
-                <Text style={styles.secondaryActionButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
               <TouchableOpacity 
                 style={[
                   styles.actionButton, 

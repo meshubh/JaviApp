@@ -1,6 +1,8 @@
 // app/ViewOrders/index.tsx - Updated with Date Range Filter
 import { Feather, MaterialIcons } from '@expo/vector-icons';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -23,7 +25,10 @@ import { DateRange, DateRangePicker } from '../common/DateRangePicker/index';
 import { useViewOrdersStyles } from './viewOrders.styles';
 
 interface ViewOrdersScreenProps {
-  navigation: DrawerNavigationProp<RootStackParamList, 'ViewOrders'>;
+  navigation: CompositeNavigationProp<
+    BottomTabNavigationProp<RootStackParamList, 'ViewOrders'>,
+    NativeStackNavigationProp<RootStackParamList>
+  >;
   route?: {
     params?: {
       orderId?: string;
@@ -363,7 +368,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
           </View>
           
           {item.order_amount && (
-            <Text style={styles.orderAmount}>₹{item.order_amount}</Text>
+            <Text style={styles.orderAmount}>TBC</Text>
           )}
         </View>
         
@@ -434,7 +439,7 @@ const ViewOrdersScreen: React.FC<ViewOrdersScreenProps> = ({ navigation, route }
           navigation={navigation}
           title="My Orders"
           showBack={false}
-          showMenu={true}
+          showMenu={false}
         />
 
         {/* Filter Tabs */}

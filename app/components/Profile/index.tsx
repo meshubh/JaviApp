@@ -1,6 +1,8 @@
 // app/screens/Profile/index.tsx
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -26,7 +28,10 @@ import PersonalInformation from '../PersonalInformation/index';
 import { useProfileStyles } from './profile.styles';
 
 interface ProfileProps {
-  navigation: DrawerNavigationProp<RootStackParamList, 'Profile'>;
+  navigation: CompositeNavigationProp<
+    BottomTabNavigationProp<RootStackParamList, 'Profile'>,
+    NativeStackNavigationProp<RootStackParamList>
+  >;
 }
 
 interface ProfileOption {
@@ -305,7 +310,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
           navigation={navigation}
           title="Profile"
           showBack={false}
-          showMenu={true}
+          showMenu={false}
         />
 
         <ScrollView 

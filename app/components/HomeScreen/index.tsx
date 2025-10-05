@@ -1,5 +1,7 @@
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -20,8 +22,13 @@ import { CustomHeader } from '../CustomHeader';
 import NotificationDropdown from '../NotificationDropdown/index';
 import { useHomeStyles } from './home.styles';
 
+type HomeScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<RootStackParamList, 'Home'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
+
 interface HomeScreenProps {
-  navigation: DrawerNavigationProp<RootStackParamList, 'Home'>;
+  navigation: HomeScreenNavigationProp;
 }
 
 interface ActionCard {
@@ -66,7 +73,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   }, []);
 
   const animateNotificationBadge = () => {
-    // Pulse animation for notification badge
     Animated.loop(
       Animated.sequence([
         Animated.timing(notificationBadgeScale, {
@@ -214,37 +220,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     <>
       <StatusBar backgroundColor={theme.colors.primary.main} barStyle="light-content" />
       <SafeAreaView style={styles.container}>
-        {/* Header */}
-        {/* <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <TouchableOpacity 
-              onPress={() => navigation.openDrawer()} 
-              style={styles.menuButton}
-            >
-              <Feather name="menu" size={24} color={theme.colors.text.onPrimary} />
-            </TouchableOpacity>
-            
-            <Text style={styles.headerTitle}>Javi Logistics</Text>
-            
-            <TouchableOpacity 
-              style={styles.notificationButton}
-              onPress={() => setNotificationDropdownVisible(true)}
-            >
-              <Ionicons name="notifications-outline" size={22} color={theme.colors.text.onPrimary} />
-              {hasNotifications && (
-                <Animated.View 
-                  style={[
-                    styles.notificationBadge,
-                    { transform: [{ scale: notificationBadgeScale }] }
-                  ]} 
-                />
-              )}
-            </TouchableOpacity>
-          </View>
-        </View> */}
         <CustomHeader
-          navigation={navigation}
+          navigation={navigation as any}
           title="Javi Logistics"
+          showMenu={false}
           rightComponent={
             <TouchableOpacity 
               style={styles.notificationButton}
